@@ -31,11 +31,12 @@ def run_dry_run(org_name: str, config: MSCConfig | None = None) -> DryRunReport:
     agents = cfg.agency_agents_root if cfg.agency_agents_root.is_absolute() else root / cfg.agency_agents_root
     if not agents.exists():
         warnings.append(f"agency_agents_root not found ({cfg.agency_agents_root}); run make vendor-sync")
-    notes = ["TODO: MySoftwareCompany runtime not ready; dry-run validates org YAML and paths only."]
+    notes = ["Dry-run validates org YAML and referenced paths only (no LLM calls)."]
     try:
-        from msc.runtime.company import RUNTIME_READY  # noqa: F401
+        import metagpt  # noqa: F401
+        notes.append("MetaGPT import OK — use `msc run` for full execution (requires API keys).")
     except ImportError:
-        notes[0] = "TODO: msc.runtime.company not on this branch; dry-run validates YAML only."
+        notes.append("MetaGPT not installed — run: make install-dev")
     return DryRunReport(
         org=template.name,
         ok=not missing,

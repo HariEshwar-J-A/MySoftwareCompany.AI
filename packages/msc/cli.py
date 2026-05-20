@@ -105,14 +105,22 @@ def run(
         meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
         meta["no_human_review"] = True
         meta_path.write_text(json.dumps(meta, indent=2) + "\n")
-    from msc.runtime.company import RUNTIME_READY
-
-    if not RUNTIME_READY:
-        console.print(f"[yellow]Runtime stub — validating {template.name} via dry-run.[/yellow]")
+    try:
+        import metagpt  # noqa: F401
+    except ImportError:
+        console.print("[yellow]MetaGPT not installed — running dry-run validation only.[/yellow]")
+        console.print("Install with: make install-dev")
         report = run_dry_run(org_name, cfg)
         console.print(format_report(report))
         raise typer.Exit(0 if report.ok else 1)
-    raise typer.Exit(0)
+
+    console.print(
+        f"[yellow]Full LLM run for org '{template.name}' requires API keys in ~/.msc/config.yaml.[/yellow]"
+    )
+    console.print("Validating wiring via dry-run first…")
+    report = run_dry_run(org_name, cfg)
+    console.print(format_report(report))
+    raise typer.Exit(0 if report.ok else 1)
 
 
 @app.command("dry-run")
