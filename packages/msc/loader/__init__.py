@@ -1,9 +1,7 @@
 # Copyright (c) 2026 MySoftwareCompany.AI
 # SPDX-License-Identifier: BUSL-1.1
 
-"""MySoftwareCompany.AI core package (mscai on PyPI)."""
-
-__version__ = "0.0.0"
+"""Agency-agents markdown loader: parse personas and index the catalog."""
 
 from msc.loader.agent_spec import AgentSpec
 from msc.loader.catalog import (
@@ -19,7 +17,6 @@ from msc.loader.markdown_parser import parse_agent_file, parse_agent_markdown
 
 __all__ = [
     "AgentSpec",
-    "__version__",
     "catalog_root",
     "get_agent",
     "is_excluded_path",
