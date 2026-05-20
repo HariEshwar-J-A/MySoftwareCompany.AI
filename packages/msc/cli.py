@@ -129,3 +129,8 @@ def main(version: bool = typer.Option(False, "--version", "-V")) -> None:
     if version:
         console.print(f"mscai {__version__}")
         raise typer.Exit(0)
+
+
+from msc.benchmarks.cli import register_benchmark_commands  # noqa: E402
+
+register_benchmark_commands(app)
