@@ -56,7 +56,7 @@ def orgs_list() -> None:
 def agents_list(division: Optional[str] = typer.Option(None, "--division")) -> None:
     """List agency-agents personas."""
     cfg = MSCConfig.load()
-    agents = list_agents(division=division, config=cfg)
+    agents = list_agents(division=division, agents_root=cfg.agency_agents_root)
     if not agents:
         console.print(f"[yellow]No agents under {cfg.agency_agents_root}. Run make vendor-sync.[/yellow]")
         raise typer.Exit(0)
@@ -71,7 +71,8 @@ def agents_list(division: Optional[str] = typer.Option(None, "--division")) -> N
 @agents_app.command("show")
 def agents_show(slug: str) -> None:
     """Show one agent persona."""
-    agent = get_agent(slug, MSCConfig.load())
+    cfg = MSCConfig.load()
+    agent = get_agent(slug, agents_root=cfg.agency_agents_root)
     if not agent:
         console.print(f"[red]Agent not found:[/red] {slug}")
         raise typer.Exit(1)
