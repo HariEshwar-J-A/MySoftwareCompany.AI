@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert info-sentry not vendored
+        run: test ! -d vendor/agency-agents/info-sentry
+
+      - name: Assert vendored MIT licenses present
+        run: |
+          test -f vendor/MetaGPT/LICENSE
+          test -f vendor/agency-agents/LICENSE
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install -e vendor/MetaGPT
+
+      - name: Ruff lint
+        run: |
+          ruff check packages scripts tests
+          ruff format --check packages scripts tests
+
+      - name: BUSL license headers
+        run: python scripts/license_header.py --check
+
+      - name: Tests
+        run: pytest -q
