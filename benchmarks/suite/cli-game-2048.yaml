@@ -1,0 +1,13 @@
+id: cli-game-2048
+name: CLI 2048 Game
+description: Terminal 2048
+project_type: game
+idea: Playable terminal 2048 with merges, spawn, game over.
+org: startup-mvp
+budget: 10.0
+requirements:
+  - Correct 2048 rules
+  - Playable in terminal
+scoring:
+  requirements_max: 3
+  polish_hours: NEEDS_HUMAN_SCORE

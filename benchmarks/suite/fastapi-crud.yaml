@@ -1,0 +1,13 @@
+id: fastapi-crud
+name: FastAPI CRUD API
+description: REST API with SQLite
+project_type: api
+idea: FastAPI items CRUD, SQLite, OpenAPI docs, pytest TestClient tests.
+org: startup-mvp
+budget: 12.0
+requirements:
+  - Full CRUD
+  - Tests pass
+scoring:
+  requirements_max: 3
+  polish_hours: NEEDS_HUMAN_SCORE

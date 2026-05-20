@@ -1,0 +1,13 @@
+id: static-landing
+name: Static Landing Page
+description: Responsive marketing landing page
+project_type: static-web
+idea: Static SaaS landing page with hero, features, pricing, FAQ, footer; responsive HTML/CSS.
+org: startup-mvp
+budget: 6.0
+requirements:
+  - Semantic HTML5
+  - Mobile and desktop responsive
+scoring:
+  requirements_max: 3
+  polish_hours: NEEDS_HUMAN_SCORE
