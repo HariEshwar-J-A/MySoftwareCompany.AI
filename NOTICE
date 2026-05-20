@@ -1,0 +1,21 @@
+MySoftwareCompany.AI
+Copyright (c) 2026 MySoftwareCompany.AI
+
+This product includes software developed by third parties under open source
+licenses. The following components are vendored under the MIT License:
+
+MetaGPT
+  Copyright (c) DeepWisdom / Alexander Wu (Geekan) and contributors
+  Source: https://github.com/geekan/MetaGPT
+  Location: vendor/MetaGPT/
+  License: MIT (see vendor/MetaGPT/LICENSE)
+
+agency-agents
+  Copyright (c) msitarzewski and contributors
+  Source: https://github.com/msitarzewski/agency-agents
+  Location: vendor/agency-agents/
+  License: MIT (see vendor/agency-agents/LICENSE)
+
+The BUSL-1.1 license at the repository root applies only to original work in
+packages/msc/, orgs/, scripts/, benchmarks/, and website/. Vendored MIT code
+retains its original license and is not relicensed.
