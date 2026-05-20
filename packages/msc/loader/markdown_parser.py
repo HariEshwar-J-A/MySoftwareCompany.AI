@@ -13,6 +13,10 @@ import yaml
 from msc.loader.agent_spec import AgentSpec
 
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+_FRONTMATTER_FIELD_RE = re.compile(
+    r"^(name|description|vibe|color|emoji):\s*(.+)$",
+    re.MULTILINE,
+)
 _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 _BULLET_RE = re.compile(r"^\s*[-*]\s+(.+)$", re.MULTILINE)
 
@@ -36,6 +40,22 @@ _SECTION_ALIASES: dict[str, tuple[str, ...]] = {
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
+
+
+def _parse_frontmatter_block(block: str) -> dict[str, str]:
+    try:
+        loaded = yaml.safe_load(block) or {}
+        if isinstance(loaded, dict):
+            return {str(k): str(v) for k, v in loaded.items() if v is not None}
+    except yaml.YAMLError:
+        pass
+
+    fields: dict[str, str] = {}
+    for match in _FRONTMATTER_FIELD_RE.finditer(block):
+        key = match.group(1)
+        value = match.group(2).strip().strip('"').strip("'")
+        fields[key] = value
+    return fields
 
 
 def _normalize_heading(title: str) -> str:
@@ -152,23 +172,21 @@ def parse_agent_markdown(
     file_path = Path(path)
     root = agents_root or file_path.parent
 
-    frontmatter: dict[str, object] = {}
+    frontmatter: dict[str, str] = {}
     body = text
     match = _FRONTMATTER_RE.match(text)
     if match:
-        loaded = yaml.safe_load(match.group(1)) or {}
-        if isinstance(loaded, dict):
-            frontmatter = loaded
+        frontmatter = _parse_frontmatter_block(match.group(1))
         body = text[match.end() :]
 
     sections = _split_sections(body)
     critical_rules = _extract_critical_rules(sections.get("critical_rules", ""))
 
-    name = str(frontmatter.get("name") or file_path.stem.replace("-", " ").title())
-    description = str(frontmatter.get("description") or "")
-    vibe = str(frontmatter.get("vibe") or "")
-    color = str(frontmatter.get("color") or "")
-    emoji = str(frontmatter.get("emoji") or "")
+    name = frontmatter.get("name") or file_path.stem.replace("-", " ").title()
+    description = frontmatter.get("description", "")
+    vibe = frontmatter.get("vibe", "")
+    color = frontmatter.get("color", "")
+    emoji = frontmatter.get("emoji", "")
 
     try:
         slug = _slug_from_path(file_path, root)
