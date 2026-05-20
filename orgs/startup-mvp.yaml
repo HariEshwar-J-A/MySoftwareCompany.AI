@@ -1,0 +1,38 @@
+name: startup-mvp
+description: 4-6 week MVP build (NEXUS-Sprint)
+source_runbook: vendor/agency-agents/strategy/runbooks/scenario-startup-mvp.md
+mode: nexus-sprint
+license: oss
+budget_default: 15.0
+orchestrator:
+  agent: vendor/agency-agents/specialized/agents-orchestrator.md
+  metagpt_class: TeamLeader
+roles:
+  - agent: vendor/agency-agents/engineering/engineering-frontend-developer.md
+    tools: [Editor, Terminal, Browser]
+    llm_tier: standard
+  - agent: vendor/agency-agents/engineering/engineering-backend-architect.md
+    tools: [Editor, Terminal]
+    llm_tier: premium
+  - agent: vendor/agency-agents/testing/testing-evidence-collector.md
+    tools: [Browser, Editor]
+    llm_tier: economy
+    role: quality_gate
+  - agent: vendor/agency-agents/testing/testing-reality-checker.md
+    role: final_gate
+phases:
+  - id: discovery
+    playbook: vendor/agency-agents/strategy/playbooks/phase-0-discovery.md
+    agents: [product-trend-researcher, design-ux-researcher]
+    parallel: true
+  - id: build
+    playbook: vendor/agency-agents/strategy/playbooks/phase-3-build.md
+    agents: [engineering-frontend-developer, engineering-backend-architect, testing-evidence-collector]
+    dev_qa_loop: true
+gates:
+  max_retries: 3
+  require_evidence: true
+  phase_advance: reality_checker_pass
+human_review:
+  required: true
+  before: [deliver, phase_advance]
