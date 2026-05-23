@@ -8,3 +8,27 @@ workspace/
 *.egg-info/
 dist/
 build/
+
+# Secrets and local credentials (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.secret
+secrets/
+
+# Local config overrides (use *.example.yaml in repo only)
+*.local.yaml
+*.local.yml
+config.local.yaml
+config.local.yml
+
+# Accidental in-repo copies of user config
+.msc/
+.metagpt/
+config2.local.yaml
+
+# Benchmark workspaces may contain generated artifacts
+benchmarks/runs/**/workspace/

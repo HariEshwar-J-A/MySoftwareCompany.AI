@@ -1,0 +1,22 @@
+# Exclude secrets and local credentials from Cursor indexing (gitignore-style).
+
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.secret
+secrets/
+
+*.local.yaml
+*.local.yml
+config.local.yaml
+config.local.yml
+
+.msc/
+.metagpt/
+config2.local.yaml
+
+workspace/
+benchmarks/runs/**/workspace/
