@@ -24,7 +24,8 @@ msc dry-run --org startup-mvp
 msc run "Build a todo CLI" --org startup-mvp --budget 10
 ```
 
-Config lives at `~/.msc/config.yaml` (LLM keys, default org, workspace path).
+Config: copy `config.example.yaml` to `~/.msc/config.yaml` (paths, default org). **API keys**
+go in `~/.metagpt/config2.yaml` only — never in the repo.
 
 ## License
 

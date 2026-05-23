@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from typing import Optional
@@ -16,6 +17,7 @@ from msc.config import MSCConfig
 from msc.loader.catalog import get_agent, list_agents
 from msc.loader.org_template import list_org_templates, load_org_template
 from msc.runtime.dry_run import format_report, run_dry_run
+from msc.runtime.llm_config import llm_credentials_ready
 
 app = typer.Typer(help="MySoftwareCompany.AI — run AI software agencies.", no_args_is_help=True)
 orgs_app = typer.Typer(help="Org templates.")
@@ -111,22 +113,50 @@ def run(
         meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
         meta["no_human_review"] = True
         meta_path.write_text(json.dumps(meta, indent=2) + "\n")
+    report = run_dry_run(org_name, cfg)
+    if not report.ok:
+        console.print(format_report(report))
+        raise typer.Exit(1)
+
     try:
         import metagpt  # noqa: F401
     except ImportError:
-        console.print("[yellow]MetaGPT not installed — running dry-run validation only.[/yellow]")
+        console.print("[yellow]MetaGPT not installed — dry-run only.[/yellow]")
         console.print("Install with: make install-dev")
-        report = run_dry_run(org_name, cfg)
         console.print(format_report(report))
-        raise typer.Exit(0 if report.ok else 1)
+        raise typer.Exit(0)
 
+    ready, hint = llm_credentials_ready()
+    if not ready:
+        console.print(f"[yellow]{hint}[/yellow]")
+        console.print(format_report(report))
+        raise typer.Exit(0)
+
+    n_rounds = rounds if rounds is not None else cfg.default_rounds
+    invest = budget if budget is not None else template.budget_default
     console.print(
-        f"[yellow]Full LLM run for org '{template.name}' requires API keys in ~/.msc/config.yaml.[/yellow]"
+        f"[bold]Running org '{template.name}'[/bold] "
+        f"(budget≈${invest:.0f}, rounds={n_rounds}) → {workspace.resolve()}"
     )
-    console.print("Validating wiring via dry-run first…")
-    report = run_dry_run(org_name, cfg)
-    console.print(format_report(report))
-    raise typer.Exit(0 if report.ok else 1)
+    from msc.runtime.runner import run_org_project
+
+    try:
+        company = asyncio.run(
+            run_org_project(
+                idea,
+                template,
+                cfg,
+                budget=budget,
+                rounds=rounds,
+                no_human_review=no_human_review,
+            )
+        )
+    except Exception as exc:
+        console.print(f"[red]Run failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]Run finished.[/green] Workspace: {company.workspace.resolve()}")
+    raise typer.Exit(0)
 
 
 @app.command("dry-run")

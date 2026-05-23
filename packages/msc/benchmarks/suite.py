@@ -14,6 +14,8 @@ from typing import Any, Optional
 import yaml
 from pydantic import BaseModel, Field
 
+from msc.runtime.llm_config import LLM_ENV_KEYS
+
 STANDARD_SUITE_IDS = (
     "todo-cli",
     "static-landing",
@@ -21,13 +23,6 @@ STANDARD_SUITE_IDS = (
     "react-spa-auth",
     "cli-game-2048",
     "csv-transform",
-)
-
-LLM_ENV_KEYS = (
-    "OPENAI_API_KEY",
-    "ANTHROPIC_API_KEY",
-    "AZURE_OPENAI_API_KEY",
-    "METAGPT_API_KEY",
 )
 
 

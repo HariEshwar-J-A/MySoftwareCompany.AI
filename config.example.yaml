@@ -1,0 +1,14 @@
+# Copy to ~/.msc/config.yaml — do not put API keys in this file.
+# LLM keys belong in ~/.metagpt/config2.yaml (see vendor/MetaGPT/config/config2.example.yaml).
+
+workspace_root: ./workspace
+orgs_root: orgs
+agency_agents_root: vendor/agency-agents
+# metagpt_config: ~/.metagpt/config2.yaml
+default_org: startup-mvp
+default_budget: 15.0
+default_rounds: 20
+llm_tiers:
+  economy: gpt-4o-mini
+  standard: gpt-4o
+  premium: claude-opus-4-20250514

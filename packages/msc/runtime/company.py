@@ -4,55 +4,23 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Sequence
 
 from metagpt.logs import logger
 from metagpt.schema import Message, UserMessage
 from metagpt.team import Team
 
 from msc.review.gate import HumanReviewGate, ReviewDecision
-from msc.runtime._types import AgentSpec
 from msc.runtime.agency_role import AgencyRoleZero
-from msc.runtime.orchestrator import AgentsOrchestrator
-
-LoadSpecFn = Callable[[str], AgentSpec]
-
-
-@dataclass
-class OrgOrchestratorRef:
-    agent: str
-    metagpt_class: str = "TeamLeader"
-
-
-@dataclass
-class OrgRoleRef:
-    agent: str
-    tools: list[str] = field(default_factory=list)
-    llm_tier: str = "standard"
-    role: str | None = None
-
-
-@dataclass
-class OrgHumanReviewConfig:
-    required: bool = True
-    before: list[str] = field(default_factory=lambda: ["deliver"])
-
-
-@dataclass
-class OrgTemplate:
-    name: str
-    description: str = ""
-    budget_default: float = 15.0
-    orchestrator: OrgOrchestratorRef | None = None
-    roles: list[OrgRoleRef] = field(default_factory=list)
-    human_review: OrgHumanReviewConfig | None = None
-
-
-def workspace_dir_for_org(org_name: str, workspace_root: Path | str = Path("workspace")) -> Path:
-    slug = org_name.replace(" ", "-").lower()
-    return Path(workspace_root) / slug
+from msc.runtime.org_model import (
+    LoadSpecFn,
+    OrgHumanReviewConfig,
+    OrgOrchestratorRef,
+    OrgRoleRef,
+    OrgTemplate,
+    workspace_dir_for_org,
+)
 
 
 class MySoftwareCompany(Team):
