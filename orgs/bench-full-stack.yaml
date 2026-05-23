@@ -1,0 +1,30 @@
+name: bench-full-stack
+description: Benchmark runner — single-phase full-stack build (no discovery, no gates)
+source_runbook: vendor/agency-agents/strategy/runbooks/scenario-startup-mvp.md
+mode: nexus-sprint
+license: oss
+budget_default: 10.0
+orchestrator:
+  agent: vendor/agency-agents/specialized/agents-orchestrator.md
+  metagpt_class: TeamLeader
+roles:
+  - agent: vendor/agency-agents/engineering/engineering-frontend-developer.md
+    tools: [Editor, Terminal]
+    llm_tier: standard
+  - agent: vendor/agency-agents/engineering/engineering-backend-architect.md
+    tools: [Editor, Terminal]
+    llm_tier: standard
+  - agent: vendor/agency-agents/testing/testing-evidence-collector.md
+    tools: [Editor]
+    llm_tier: economy
+    role: quality_gate
+phases:
+  - id: build
+    playbook: vendor/agency-agents/strategy/playbooks/phase-3-build.md
+    agents: [engineering-frontend-developer, engineering-backend-architect, testing-evidence-collector]
+    dev_qa_loop: true
+gates:
+  max_retries: 3
+  require_evidence: true
+human_review:
+  required: false

@@ -269,13 +269,33 @@ class MySoftwareCompany(Team):
                     f"[NEXUS → {phase.id}]\n{brief}"
                 )
 
+            # Run the phase. If the env goes idle quickly (TeamLeader called `end`
+            # but the engineer hasn't written files yet), re-nudge and run again.
             try:
                 phase_history = await self.run(n_round=rounds_per_phase)
-            except Exception as exc:  # noqa: BLE001 — API errors (SSE, timeout) must not abort the whole run
-                logger.warning("Phase '{}' run raised an exception — continuing with partial history: {}", phase.id, exc)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Phase '{}' run raised: {}", phase.id, exc)
                 phase_history = None
             if phase_history:
                 history.extend(phase_history)
+
+            # If workspace is still empty after the first sub-run, nudge the team
+            # and run more rounds so the engineer has a real chance to write files.
+            from msc.review.deliverable import verify_workspace_deliverables  # noqa: PLC0415
+            check = verify_workspace_deliverables(self.workspace)
+            if not check.ok:
+                logger.info("Phase '{}' workspace empty after first pass — nudging team for {} more rounds", phase.id, rounds_per_phase)
+                self._publish_review_feedback(
+                    f"[Phase {phase.id} — write deliverables now]\n"
+                    "No source files found yet. Engineer: please write all required files to the workspace immediately."
+                )
+                try:
+                    extra = await self.run(n_round=rounds_per_phase)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("Phase '{}' nudge run raised: {}", phase.id, exc)
+                    extra = None
+                if extra:
+                    history.extend(extra)
 
             # Mid-phase gate: check evidence, feed back errors as revision request.
             if i < len(phases) - 1 and gates_cfg.require_evidence:

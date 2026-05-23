@@ -87,18 +87,20 @@ class NexusRunner:
         return state
 
     def phase_brief(self, state: NexusState | None = None) -> str:
-        """Context block injected into the project idea for the active phase."""
+        """Context block injected into the project idea for the active phase.
+
+        Intentionally omits agent slugs — the TeamLeader already knows the roster
+        and injecting slugs causes it to use them as send_to targets, which breaks
+        MetaGPT's name-based message routing.
+        """
         state = state or self.load()
         phase = state.current_phase
         if phase is None:
             return ""
-        agents = ", ".join(phase.get("agents") or [])
-        parallel = "parallel activation" if phase.get("parallel") else "sequential activation"
-        dev_qa = " with dev↔QA loop" if phase.get("dev_qa_loop") else ""
+        dev_qa = " (dev↔QA loop)" if phase.get("dev_qa_loop") else ""
         return (
-            f"[NEXUS phase: {phase.get('id', 'unknown')}]\n"
+            f"[NEXUS phase: {phase.get('id', 'unknown')}{dev_qa}]\n"
             f"Playbook: {phase.get('playbook', '')}\n"
-            f"Activate agents ({parallel}{dev_qa}): {agents}\n"
         )
 
     def advance(self) -> NexusState:

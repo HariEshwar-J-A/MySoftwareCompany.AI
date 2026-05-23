@@ -3,8 +3,9 @@ name: React SPA with Auth
 description: Vite React login and protected route
 project_type: spa
 idea: React Vite SPA with login, protected dashboard, logout; mock auth OK.
-org: startup-mvp
+org: bench-full-stack
 budget: 15.0
+rounds: 25
 requirements:
   - Auth flow works
   - Production build succeeds

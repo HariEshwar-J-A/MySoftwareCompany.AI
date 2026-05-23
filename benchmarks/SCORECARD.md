@@ -30,4 +30,4 @@ msc benchmark gate
 Set API keys, merge Phase 1 runtime + vendor/MetaGPT, then `msc benchmark run`.
 Score each `benchmarks/runs/<id>/result.json` after human review.
 
-_Generated 2026-05-23 23:05 UTC_
+_Generated 2026-05-23 23:21 UTC_

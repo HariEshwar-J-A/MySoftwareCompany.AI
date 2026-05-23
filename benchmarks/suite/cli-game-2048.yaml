@@ -3,8 +3,9 @@ name: CLI 2048 Game
 description: Terminal 2048
 project_type: game
 idea: Playable terminal 2048 with merges, spawn, game over.
-org: startup-mvp
+org: bench-full-stack
 budget: 10.0
+rounds: 25
 requirements:
   - Correct 2048 rules
   - Playable in terminal

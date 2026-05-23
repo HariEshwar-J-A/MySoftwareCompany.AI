@@ -14,7 +14,6 @@ from typing import Any, Optional
 import yaml
 from pydantic import BaseModel, Field
 
-from msc.runtime.llm_config import LLM_ENV_KEYS
 
 STANDARD_SUITE_IDS = (
     "todo-cli",
@@ -79,7 +78,9 @@ def discover_specs(suite: str = "standard", spec_id: str | None = None) -> list[
 
 
 def has_llm_credentials() -> bool:
-    return any(os.environ.get(k, "").strip() for k in LLM_ENV_KEYS)
+    from msc.runtime.llm_config import llm_credentials_ready  # noqa: PLC0415
+    ready, _ = llm_credentials_ready()
+    return ready
 
 
 @dataclass
@@ -133,14 +134,28 @@ def run_benchmark(spec: BenchmarkSpec, *, dry_run: bool) -> BenchmarkRunOutcome:
         )
         _write_run_manifest(spec, outcome)
         return outcome
-    proc = subprocess.run(
-        ["msc", "run", spec.idea.strip(), "--org", spec.org, f"--budget={spec.budget}"],
-        cwd=repo_root(),
-        env={**os.environ, "MSC_BENCHMARK_ID": spec.id},
-        capture_output=True,
-        text=True,
-    )
-    msg = "completed via msc run" if proc.returncode == 0 else (proc.stderr or proc.stdout or "failed")
+    timeout_s = spec.rounds * 25  # generous: ~25s per round
+    try:
+        proc = subprocess.run(
+            [
+                "msc", "run", spec.idea.strip(),
+                "--org", spec.org,
+                f"--budget={spec.budget}",
+                f"--rounds={spec.rounds}",
+                "--no-human-review",
+            ],
+            cwd=repo_root(),
+            env={**os.environ, "MSC_BENCHMARK_ID": spec.id, "MSC_BENCHMARK_WORKSPACE": str(workspace)},
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+        )
+        msg = "completed via msc run" if proc.returncode == 0 else (proc.stderr or proc.stdout or "failed")
+    except subprocess.TimeoutExpired as exc:
+        # Partial output may still be usable — note timeout but don't fail hard.
+        msg = f"timeout after {timeout_s}s — partial run (workspace may contain usable files)"
+        exc.kill()
+        proc = type("_FakeProc", (), {"returncode": 1, "stderr": msg, "stdout": ""})()  # type: ignore[assignment]
     outcome = BenchmarkRunOutcome(spec.id, False, workspace, msg, proc.returncode != 0)
     _write_run_manifest(spec, outcome)
     return outcome

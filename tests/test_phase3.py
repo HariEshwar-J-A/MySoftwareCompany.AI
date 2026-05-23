@@ -43,12 +43,12 @@ def test_nexus_initialize_and_advance(tmp_path: Path) -> None:
 
     brief = runner.phase_brief(state)
     assert "[NEXUS phase: a]" in brief
-    assert "agent-a" in brief
+    assert "agent-a" not in brief  # slugs must not appear — breaks MetaGPT name routing
 
     advanced = runner.advance()
     assert advanced.current_phase_index == 1
     assert advanced.current_phase["id"] == "b"
-    assert "dev↔QA loop" in runner.phase_brief(advanced)
+    assert "(dev↔QA loop)" in runner.phase_brief(advanced)
 
     complete = runner.mark_complete()
     assert complete.status == "complete"
@@ -126,9 +126,10 @@ def test_deliverable_gate_retries_on_failure(tmp_path: Path) -> None:
     asyncio.run(_run())
 
 
-def test_deliverable_gate_skipped_when_evidence_not_required(tmp_path: Path) -> None:
+def test_deliverable_gate_empty_workspace_fails(tmp_path: Path) -> None:
     report = verify_workspace_deliverables(tmp_path)
     assert report.ok is False
+    assert report.errors  # now an error, not a warning
 
 
 def test_deliverable_gate_skip_evidence(tmp_path: Path) -> None:

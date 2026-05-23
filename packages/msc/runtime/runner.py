@@ -20,17 +20,27 @@ async def run_org_project(
     budget: float | None = None,
     rounds: int | None = None,
     no_human_review: bool = False,
+    workspace_override: "Path | None" = None,
 ) -> MySoftwareCompany:
     """Bootstrap roster, run MetaGPT rounds, and apply human-review gate."""
+    from pathlib import Path  # noqa: F401 — used in type hint above
+
     runtime_template = to_runtime_template(template)
     if budget is not None:
         runtime_template.budget_default = budget
 
+    workspace_root = (
+        workspace_override.parent
+        if workspace_override is not None
+        else resolve_workspace_root(config.workspace_root)
+    )
     company = MySoftwareCompany.from_org(
         runtime_template,
-        workspace_root=resolve_workspace_root(config.workspace_root),
+        workspace_root=workspace_root,
         msc_config=config,
     )
+    if workspace_override is not None:
+        company.workspace = workspace_override
     load_spec = make_load_spec(config)
     await company.run_with_review(
         idea,

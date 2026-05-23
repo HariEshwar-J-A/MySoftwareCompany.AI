@@ -104,10 +104,18 @@ def run(
     ),
 ) -> None:
     """Run an org against a project idea."""
+    import os
+    from pathlib import Path
+
     cfg = MSCConfig.load()
     org_name = org or cfg.default_org
     template = load_org_template(org_name, cfg)
-    workspace = workspace_dir_for_org(template.name, cfg.workspace_root)
+    # MSC_BENCHMARK_WORKSPACE lets the benchmark runner redirect output to
+    # benchmarks/runs/<id>/workspace instead of the default workspace/<org>/ path.
+    if _bm_ws := os.environ.get("MSC_BENCHMARK_WORKSPACE", "").strip():
+        workspace = Path(_bm_ws)
+    else:
+        workspace = workspace_dir_for_org(template.name, cfg.workspace_root)
     workspace.mkdir(parents=True, exist_ok=True)
     if no_human_review:
         stderr_console.print("[bold red]WARNING: Human review gate disabled. Do not use for client deliverables.[/bold red]")
@@ -153,6 +161,7 @@ def run(
                 budget=budget,
                 rounds=rounds,
                 no_human_review=no_human_review,
+                workspace_override=workspace if _bm_ws else None,
             )
         )
     except DeliverableCheckError as exc:
