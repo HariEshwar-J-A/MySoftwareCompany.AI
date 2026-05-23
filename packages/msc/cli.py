@@ -111,7 +111,9 @@ def run(
     workspace.mkdir(parents=True, exist_ok=True)
     if no_human_review:
         stderr_console.print("[bold red]WARNING: Human review gate disabled. Do not use for client deliverables.[/bold red]")
-        meta_path = workspace / "metadata.json"
+        msc_dir = workspace / ".msc"
+        msc_dir.mkdir(parents=True, exist_ok=True)
+        meta_path = msc_dir / "metadata.json"
         meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
         meta["no_human_review"] = True
         meta_path.write_text(json.dumps(meta, indent=2) + "\n")

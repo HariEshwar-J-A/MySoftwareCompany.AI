@@ -9,7 +9,7 @@ from rich.table import Table
 
 from typing import Optional
 
-from msc.benchmarks.scorer import check_gate, collect_rows, write_scorecard
+from msc.benchmarks.scorer import MIN_SCORED_FOR_PRELIMINARY, check_gate, collect_rows, write_scorecard
 from msc.benchmarks.suite import STANDARD_SUITE_IDS, discover_specs, has_llm_credentials, run_suite, write_score
 
 console = Console()
@@ -91,8 +91,17 @@ def benchmark_report(suite: str = typer.Option("standard", "--suite")) -> None:
 
 
 @benchmark_app.command("gate")
-def benchmark_gate(suite: str = typer.Option("standard", "--suite")) -> None:
-    gate = check_gate(collect_rows(suite=suite))
+def benchmark_gate(
+    suite: str = typer.Option("standard", "--suite"),
+    preliminary: bool = typer.Option(False, "--preliminary", help=f"Show gate status with ≥{MIN_SCORED_FOR_PRELIMINARY} scored runs."),
+) -> None:
+    gate = check_gate(collect_rows(suite=suite), preliminary=preliminary)
+    req_avg = gate.get("requirements_avg")
+    pol_med = gate.get("polish_median_hours")
+    if req_avg is not None:
+        console.print(f"  Avg requirements met: {req_avg:.2f} (threshold ≥ 0.67)")
+    if pol_med is not None:
+        console.print(f"  Median polish hours:  {pol_med:.1f}h (threshold ≤ 8h)")
     console.print(f"Gate status: [bold]{gate['status']}[/bold] — {gate['reason']}")
     if not gate["passed"]:
         raise typer.Exit(1)

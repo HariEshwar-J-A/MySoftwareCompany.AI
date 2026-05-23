@@ -11,7 +11,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 _IGNORED_PARTS = frozenset({".msc", "__pycache__", ".git", "node_modules"})
+# Metadata files we write ourselves — never count as deliverable evidence.
+_OWN_METADATA = frozenset({"metadata.json"})
 _SOURCE_SUFFIXES = frozenset({".html", ".htm", ".py", ".js", ".jsx", ".ts", ".tsx", ".json", ".md"})
+# At least one of these suffixes must be present for a run to be considered a real deliverable.
+_CODE_SUFFIXES = frozenset({".html", ".htm", ".py", ".js", ".jsx", ".ts", ".tsx"})
 _SCRIPT_TAG_RE = re.compile(r"<script([^>]*)>(.*?)</script>", re.DOTALL | re.IGNORECASE)
 _JSX_IN_JS_RE = re.compile(r"<\s*[A-Za-z][\w.-]*")
 _BABEL_RE = re.compile(r"babel(?:\.min)?\.js|@babel/standalone", re.IGNORECASE)
@@ -62,6 +66,8 @@ def _iter_source_files(workspace: Path) -> list[Path]:
             continue
         if path.name.startswith(".") and path.name not in {".gitkeep"}:
             continue
+        if path.name in _OWN_METADATA:
+            continue
         if path.suffix.lower() in _SOURCE_SUFFIXES or path.name in {"Makefile", "Dockerfile"}:
             files.append(path)
     return sorted(files)
@@ -111,7 +117,15 @@ def verify_workspace_deliverables(workspace: Path | str) -> DeliverableReport:
 
     sources = _iter_source_files(root)
     if not sources:
-        report.warnings.append("no deliverable source files found in workspace")
+        report.errors.append("no deliverable source files found in workspace")
+        report.ok = False
+        return report
+
+    has_code = any(p.suffix.lower() in _CODE_SUFFIXES for p in sources)
+    if not has_code:
+        report.errors.append(
+            "workspace contains only docs/data files (json, md) — no executable code found"
+        )
         report.ok = False
         return report
 

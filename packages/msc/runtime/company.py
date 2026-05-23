@@ -201,7 +201,11 @@ class MySoftwareCompany(Team):
         if template.phases:
             history = await self._run_phases(template.phases, gates_cfg, n_round)
         else:
-            history = await self.run(n_round=n_round, idea=idea if not self.idea else "")
+            try:
+                history = await self.run(n_round=n_round, idea=idea if not self.idea else "")
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Team run raised an exception — continuing to gate checks: {}", exc)
+                history = []
 
         if review_cfg.required and not no_human_review and "deliver" in stages:
             decision = gate.checkpoint("deliver", interactive=interactive_review)
@@ -265,8 +269,13 @@ class MySoftwareCompany(Team):
                     f"[NEXUS → {phase.id}]\n{brief}"
                 )
 
-            phase_history = await self.run(n_round=rounds_per_phase)
-            history.extend(phase_history)
+            try:
+                phase_history = await self.run(n_round=rounds_per_phase)
+            except Exception as exc:  # noqa: BLE001 — API errors (SSE, timeout) must not abort the whole run
+                logger.warning("Phase '{}' run raised an exception — continuing with partial history: {}", phase.id, exc)
+                phase_history = None
+            if phase_history:
+                history.extend(phase_history)
 
             # Mid-phase gate: check evidence, feed back errors as revision request.
             if i < len(phases) - 1 and gates_cfg.require_evidence:

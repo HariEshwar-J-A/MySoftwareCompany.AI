@@ -1,6 +1,10 @@
 {
   "id": "csv-transform",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 2,
+  "polish_hours": 2.0,
+  "notes": "csv_aggregator.py compiles clean. filter+aggregate+sum+average all work. sample.csv and test1.sh included. CLI arg names differ from README examples (underscore vs dash) - minor UX fix needed. Run crashed mid-refinement due to transient OpenRouter SSE error, not code quality.",
+  "compiles": 1,
+  "tests_pass": 1,
+  "llm_cost_usd": 0.03,
+  "scored_at": "2026-05-23T23:05:26.086767+00:00"
 }

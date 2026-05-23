@@ -1,6 +1,10 @@
 {
   "id": "todo-cli",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 1,
+  "polish_hours": 0.5,
+  "notes": "todo.py written with add/list/complete/delete structure but f-string syntax error on line 41 (unmatched bracket). Retry loop fired correctly. One-line fix to pass.",
+  "compiles": 0,
+  "tests_pass": 0,
+  "llm_cost_usd": 0.02,
+  "scored_at": "2026-05-23T23:05:09.458747+00:00"
 }

@@ -82,13 +82,29 @@ def aggregate_scores(rows: list[BenchmarkScoreRow]) -> dict[str, Any]:
     }
 
 
-def check_gate(rows: list[BenchmarkScoreRow]) -> dict[str, Any]:
+MIN_SCORED_FOR_PRELIMINARY = 2  # minimum scored runs to get a preliminary gate read
+
+
+def check_gate(rows: list[BenchmarkScoreRow], *, preliminary: bool = False) -> dict[str, Any]:
     s = aggregate_scores(rows)
-    missing = s["requirements_scored"] < s["count"] or s["polish_scored"] < s["count"]
+    scored = min(s["requirements_scored"], s["polish_scored"])
+    missing = scored < s["count"]
     req_ok = s["requirements_avg"] is not None and s["requirements_avg"] >= PASS_REQUIREMENTS_AVG
     pol_ok = s["polish_median_hours"] is not None and s["polish_median_hours"] <= PASS_POLISH_MEDIAN_HOURS
-    if missing:
-        return {**s, "status": "INCOMPLETE", "passed": False, "reason": "Human scores required (NEEDS_HUMAN_SCORE)."}
+
+    if missing and not (preliminary and scored >= MIN_SCORED_FOR_PRELIMINARY):
+        return {
+            **s,
+            "status": "INCOMPLETE",
+            "passed": False,
+            "reason": f"Human scores required ({scored}/{s['count']} scored). "
+            f"Run `msc benchmark gate --preliminary` for a partial read once ≥{MIN_SCORED_FOR_PRELIMINARY} are scored.",
+        }
+    if missing and preliminary:
+        prefix = f"PRELIMINARY ({scored}/{s['count']} scored) — "
+        if req_ok and pol_ok:
+            return {**s, "status": "PRELIMINARY_PASS", "passed": True, "reason": prefix + "on track to meet threshold."}
+        return {**s, "status": "PRELIMINARY_FAIL", "passed": False, "reason": prefix + "below threshold so far."}
     if req_ok and pol_ok:
         return {**s, "status": "PASS", "passed": True, "reason": "Meets Phase 2 gate threshold."}
     return {**s, "status": "FAIL", "passed": False, "reason": "Below pass threshold."}

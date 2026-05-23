@@ -63,7 +63,24 @@ def test_deliverable_check_passes_create_element_html(tmp_path: Path) -> None:
 def test_deliverable_check_no_source_files(tmp_path: Path) -> None:
     report = verify_workspace_deliverables(tmp_path)
     assert report.ok is False
-    assert any("no deliverable" in w for w in report.warnings)
+    assert any("no deliverable" in e for e in report.errors)
+
+
+def test_deliverable_check_metadata_json_ignored(tmp_path: Path) -> None:
+    """Our own metadata.json must not count as a deliverable."""
+    (tmp_path / "metadata.json").write_text('{"no_human_review": true}')
+    report = verify_workspace_deliverables(tmp_path)
+    assert report.ok is False
+    assert any("no deliverable" in e for e in report.errors)
+
+
+def test_deliverable_check_json_only_no_code(tmp_path: Path) -> None:
+    """JSON + MD alone are not sufficient — need at least one code file."""
+    (tmp_path / "data.json").write_text('{"key": "value"}')
+    (tmp_path / "README.md").write_text("# readme")
+    report = verify_workspace_deliverables(tmp_path)
+    assert report.ok is False
+    assert any("executable code" in e for e in report.errors)
 
 
 def test_deliverable_check_error_message(tmp_path: Path) -> None:
