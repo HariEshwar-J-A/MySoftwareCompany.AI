@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Sequence
 
+from pydantic import Field
+
 from metagpt.roles.di.role_zero import RoleZero
+from metagpt.tools.libs.terminal import Terminal
 
 from msc.runtime._types import AgentSpec
 
@@ -32,6 +36,20 @@ class AgencyRoleZero(RoleZero):
     agency_slug: str = ""
     llm_tier: str = "standard"
     agent_path: str = ""
+    terminal: Terminal = Field(default_factory=Terminal, exclude=True)
+
+    def _update_tool_execution(self) -> None:
+        super()._update_tool_execution()
+        self.tool_execution_map.update(
+            {
+                "Terminal.run_command": self.terminal.run_command,
+            }
+        )
+
+    def bind_workspace(self, workspace: str | Path) -> None:
+        """Point editor/terminal at the org workspace before execution."""
+        root = str(Path(workspace).resolve())
+        self.editor._set_workdir(root)
 
     @classmethod
     def from_spec(

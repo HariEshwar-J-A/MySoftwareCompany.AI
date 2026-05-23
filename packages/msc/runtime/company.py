@@ -73,13 +73,13 @@ class MySoftwareCompany(Team):
 
         for entry in template.roles:
             spec = load_spec(entry.agent)
-            roster.append(
-                AgencyRoleZero.from_spec(
-                    spec,
-                    tools=entry.tools or None,
-                    llm_tier=entry.llm_tier,
-                )
+            role = AgencyRoleZero.from_spec(
+                spec,
+                tools=entry.tools or None,
+                llm_tier=entry.llm_tier,
             )
+            role.bind_workspace(self.workspace)
+            roster.append(role)
 
         self.hire(roster)
         logger.info("Hired %s roles for org '%s' into %s", len(roster), template.name, self.workspace)
