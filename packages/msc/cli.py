@@ -26,6 +26,12 @@ console = Console()
 stderr_console = Console(file=sys.stderr)
 
 
+@app.command("version")
+def version_cmd() -> None:
+    """Print package version."""
+    console.print(f"mscai {__version__}")
+
+
 @app.command()
 def init(force: bool = typer.Option(False, "--force")) -> None:
     """Write ~/.msc/config.yaml."""
@@ -124,19 +130,12 @@ def run(
 
 
 @app.command("dry-run")
-def dry_run(org: Optional[str] = typer.Option(None, "--org")) -> None:
+def dry_run(org: Optional[str] = typer.Option(None, "--org", help="Org template name")) -> None:
     """Validate org wiring without LLM calls."""
     cfg = MSCConfig.load()
     report = run_dry_run(org or cfg.default_org, cfg)
     console.print(format_report(report))
     raise typer.Exit(0 if report.ok else 1)
-
-
-@app.callback()
-def main(version: bool = typer.Option(False, "--version", "-V")) -> None:
-    if version:
-        console.print(f"mscai {__version__}")
-        raise typer.Exit(0)
 
 
 from msc.benchmarks.cli import register_benchmark_commands  # noqa: E402

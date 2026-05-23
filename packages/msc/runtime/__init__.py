@@ -33,5 +33,5 @@ try:
         "OrgTemplate",
         "workspace_dir_for_org",
     ]
-except ImportError:
+except Exception:
     pass
