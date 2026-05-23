@@ -13,6 +13,7 @@ from metagpt.team import Team
 
 from msc.review.gate import HumanReviewGate, ReviewDecision
 from msc.runtime.agency_role import AgencyRoleZero
+from msc.runtime.orchestrator import AgentsOrchestrator
 from msc.runtime.org_model import (
     LoadSpecFn,
     OrgHumanReviewConfig,

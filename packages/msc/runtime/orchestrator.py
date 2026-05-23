@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from metagpt.const import TEAMLEADER_NAME
 from metagpt.roles.di.team_leader import TeamLeader
 
 from msc.runtime._types import AgentSpec
@@ -51,7 +52,7 @@ class AgentsOrchestrator(TeamLeader):
         constraints = "\n".join(f"- {rule}" for rule in rules) if rules else ""
         goal = getattr(spec, "core_mission", "") or getattr(spec, "description", "")
         return cls(
-            name=spec.name,
+            name=TEAMLEADER_NAME,
             profile=getattr(spec, "division", "") or cls.profile,
             goal=goal.strip() or "Orchestrate the agency pipeline to ship quality software",
             constraints=constraints,
