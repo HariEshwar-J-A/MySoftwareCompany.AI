@@ -29,6 +29,7 @@ async def run_org_project(
     company = MySoftwareCompany.from_org(
         runtime_template,
         workspace_root=resolve_workspace_root(config.workspace_root),
+        msc_config=config,
     )
     load_spec = make_load_spec(config)
     await company.run_with_review(

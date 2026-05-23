@@ -1,0 +1,41 @@
+name: marketing-campaign
+description: Multi-channel marketing campaign (NEXUS-Micro to Sprint, 2-4 weeks)
+source_runbook: vendor/agency-agents/strategy/runbooks/scenario-marketing-campaign.md
+mode: nexus-sprint
+license: oss
+budget_default: 10.0
+orchestrator:
+  agent: vendor/agency-agents/specialized/agents-orchestrator.md
+  metagpt_class: TeamLeader
+roles:
+  - agent: vendor/agency-agents/marketing/marketing-social-media-strategist.md
+    tools: [Editor]
+    llm_tier: premium
+  - agent: vendor/agency-agents/marketing/marketing-content-creator.md
+    tools: [Editor]
+    llm_tier: standard
+  - agent: vendor/agency-agents/marketing/marketing-growth-hacker.md
+    tools: [Editor]
+    llm_tier: standard
+  - agent: vendor/agency-agents/testing/testing-evidence-collector.md
+    tools: [Browser, Editor]
+    llm_tier: economy
+    role: quality_gate
+  - agent: vendor/agency-agents/testing/testing-reality-checker.md
+    role: final_gate
+phases:
+  - id: strategy
+    playbook: vendor/agency-agents/strategy/playbooks/phase-1-strategy.md
+    agents: [marketing-social-media-strategist, marketing-growth-hacker]
+    parallel: true
+  - id: production
+    playbook: vendor/agency-agents/strategy/playbooks/phase-3-build.md
+    agents: [marketing-content-creator, marketing-social-media-strategist, testing-evidence-collector]
+    dev_qa_loop: true
+gates:
+  max_retries: 3
+  require_evidence: true
+  phase_advance: reality_checker_pass
+human_review:
+  required: true
+  before: [deliver, phase_advance]

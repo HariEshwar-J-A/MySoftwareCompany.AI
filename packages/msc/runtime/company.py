@@ -11,18 +11,24 @@ from metagpt.logs import logger
 from metagpt.schema import Message, UserMessage
 from metagpt.team import Team
 
-from msc.review.deliverable import DeliverableCheckError, verify_workspace_deliverables
+from msc.review.deliverable import DeliverableCheckError
+from msc.review.quality_gates import run_deliverable_gate
 from msc.review.gate import HumanReviewGate, ReviewDecision
 from msc.runtime.agency_role import AgencyRoleZero
+from msc.runtime.llm_tiers import model_for_tier, record_tier_plan, tier_plan_for_roles
+from msc.runtime.nexus import NexusRunner
 from msc.runtime.orchestrator import AgentsOrchestrator
 from msc.runtime.org_model import (
     LoadSpecFn,
+    OrgGatesConfig,
     OrgHumanReviewConfig,
     OrgOrchestratorRef,
+    OrgPhaseRef,
     OrgRoleRef,
     OrgTemplate,
     workspace_dir_for_org,
 )
+from msc.runtime.serialize import save_team
 
 
 class MySoftwareCompany(Team):
@@ -31,9 +37,18 @@ class MySoftwareCompany(Team):
     org_name: str = ""
     workspace: Path = Path("workspace/default")
     org_template: OrgTemplate | None = None
+    msc_config: Any = None
 
-    def __init__(self, *, workspace: Path | str | None = None, org_template: OrgTemplate | None = None, **data: Any):
+    def __init__(
+        self,
+        *,
+        workspace: Path | str | None = None,
+        org_template: OrgTemplate | None = None,
+        msc_config: Any = None,
+        **data: Any,
+    ):
         super().__init__(**data)
+        self.msc_config = msc_config
         if org_template is not None:
             self.org_template = org_template
             self.org_name = org_template.name
@@ -50,9 +65,10 @@ class MySoftwareCompany(Team):
         *,
         workspace_root: Path | str = Path("workspace"),
         context: Any = None,
+        msc_config: Any = None,
     ) -> MySoftwareCompany:
         workspace = workspace_dir_for_org(template.name, workspace_root)
-        return cls(workspace=workspace, org_template=template, context=context)
+        return cls(workspace=workspace, org_template=template, context=context, msc_config=msc_config)
 
     def _bind_roster_workspace(self, roster: list[Any]) -> None:
         for role in roster:
@@ -89,13 +105,53 @@ class MySoftwareCompany(Team):
 
         self._bind_roster_workspace(roster)
         self.hire(roster)
+        self._apply_llm_tiers()
+        if self.msc_config is not None and self.env:
+            tier_plan = tier_plan_for_roles(list(self.env.roles.values()), self.msc_config)
+            meta_path = self.workspace / ".msc" / "org.json"
+            if meta_path.exists():
+                extra = json.loads(meta_path.read_text(encoding="utf-8"))
+            else:
+                extra = {}
+            record_tier_plan(extra, tier_plan)
+            meta_path.parent.mkdir(parents=True, exist_ok=True)
+            meta_path.write_text(json.dumps(extra, indent=2) + "\n", encoding="utf-8")
         logger.info("Hired {} roles for org '{}' into {}", len(roster), template.name, self.workspace)
+
+    def _apply_llm_tiers(self) -> None:
+        """Assign per-role MetaGPT private_config so each role uses its llm_tier model."""
+        if self.msc_config is None or not self.env:
+            return
+        try:
+            from metagpt.config2 import Config as MetaGPTConfig  # noqa: PLC0415
+        except ImportError:
+            return
+        for role in self.env.roles.values():
+            tier = getattr(role, "llm_tier", "standard")
+            if tier == "standard":
+                continue
+            model_name = model_for_tier(tier, self.msc_config.llm_tiers)
+            try:
+                base_cfg: MetaGPTConfig = role.context.config
+                overridden_llm = base_cfg.llm.model_copy(update={"model": model_name})
+                private_cfg = base_cfg.model_copy(update={"llm": overridden_llm})
+                role.set_config(private_cfg)
+                logger.debug("Role '{}' → llm_tier={} model={}", role.name, tier, model_name)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not apply llm_tier for role '{}': {}", role.name, exc)
+
+    def _nexus_idea(self, idea: str) -> str:
+        if not self.org_template or not self.org_template.phases:
+            return idea
+        nexus = NexusRunner(self.workspace, self.org_template)
+        brief = nexus.phase_brief()
+        return f"{brief}\n{idea}" if brief else idea
 
     def bootstrap(self, template: OrgTemplate, idea: str, *, load_spec: LoadSpecFn) -> None:
         """Hire roster, set budget, and publish the project idea."""
         self.hire_from_template(template, load_spec)
         self.invest(template.budget_default)
-        self.run_project(idea)
+        self.run_project(self._nexus_idea(idea))
 
     def write_org_metadata(self, extra: dict[str, Any] | None = None) -> Path:
         meta_path = self.workspace / ".msc" / "org.json"
@@ -130,15 +186,22 @@ class MySoftwareCompany(Team):
             self.bootstrap(template, idea, load_spec=load_spec)
         elif idea:
             self.invest(template.budget_default)
-            self.run_project(idea)
+            self.run_project(self._nexus_idea(idea))
+
+        if template.phases:
+            NexusRunner(self.workspace, template).initialize()
 
         review_cfg = template.human_review or OrgHumanReviewConfig()
+        gates_cfg = template.gates or OrgGatesConfig()
         gate = HumanReviewGate(self.workspace, required=review_cfg.required)
         gate.apply_bypass_flag(no_human_review)
         self.write_org_metadata(gate.read_metadata())
 
         stages = list(review_stages or review_cfg.before or ["deliver"])
-        history = await self.run(n_round=n_round, idea=idea if not self.idea else "")
+        if template.phases:
+            history = await self._run_phases(template.phases, gates_cfg, n_round)
+        else:
+            history = await self.run(n_round=n_round, idea=idea if not self.idea else "")
 
         if review_cfg.required and not no_human_review and "deliver" in stages:
             decision = gate.checkpoint("deliver", interactive=interactive_review)
@@ -151,18 +214,76 @@ class MySoftwareCompany(Team):
                 logger.warning("Run rejected at human review gate for org '{}'", self.org_name)
                 return history
 
-        deliverable = verify_workspace_deliverables(self.workspace)
-        gate.write_metadata({"deliverable_check": deliverable.to_dict()})
-        if not deliverable.ok:
+        deliverable = await run_deliverable_gate(self, gates_cfg)
+        gate.write_metadata({"quality_gate": deliverable.to_dict()})
+        if not deliverable.passed:
             gate.record_run_outcome("failed_deliverable_check", no_human_review=no_human_review)
-            for msg in deliverable.errors:
+            for msg in deliverable.report.errors:
                 logger.error("Deliverable check: {}", msg)
-            for msg in deliverable.warnings:
-                logger.warning("Deliverable check: {}", msg)
-            raise DeliverableCheckError(deliverable)
+            raise DeliverableCheckError(deliverable.report)
+
+        if template.phases:
+            NexusRunner(self.workspace, template).mark_complete()
 
         gate.record_run_outcome("completed", no_human_review=no_human_review)
         self.write_org_metadata(gate.read_metadata())
+        try:
+            save_team(self, self.workspace)
+        except Exception as exc:  # noqa: BLE001 — serialization optional
+            logger.warning("Team serialize skipped: {}", exc)
+        return history
+
+    async def _run_phases(
+        self,
+        phases: list[OrgPhaseRef],
+        gates_cfg: OrgGatesConfig,
+        total_rounds: int,
+    ) -> list[Message]:
+        """Execute each NEXUS phase as its own MetaGPT sub-run.
+
+        Rounds are divided evenly across phases. Between phases, a brief
+        deliverable check is done; failures are surfaced as feedback but do
+        not abort early (the final gate in run_with_review handles that).
+        """
+        history: list[Message] = []
+        nexus = NexusRunner(self.workspace, self.org_template)  # type: ignore[arg-type]
+        rounds_per_phase = max(1, total_rounds // len(phases))
+
+        for i, phase in enumerate(phases):
+            # Advance state and broadcast the phase context to all agents.
+            state = nexus.advance() if i > 0 else nexus.initialize()
+            brief = nexus.phase_brief(state)
+            logger.info(
+                "NEXUS phase {}/{}: {} ({}r)",
+                i + 1,
+                len(phases),
+                phase.id,
+                rounds_per_phase,
+            )
+            if brief:
+                self._publish_review_feedback(
+                    f"[NEXUS → {phase.id}]\n{brief}"
+                )
+
+            phase_history = await self.run(n_round=rounds_per_phase)
+            history.extend(phase_history)
+
+            # Mid-phase gate: check evidence, feed back errors as revision request.
+            if i < len(phases) - 1 and gates_cfg.require_evidence:
+                from msc.review.deliverable import verify_workspace_deliverables  # noqa: PLC0415
+
+                report = verify_workspace_deliverables(self.workspace)
+                if not report.ok:
+                    logger.warning(
+                        "Phase '{}' gate not fully passed — continuing to next phase with feedback",
+                        phase.id,
+                    )
+                    self._publish_review_feedback(
+                        "[Phase gate — incomplete evidence]\n"
+                        + "\n".join(f"- {e}" for e in report.errors)
+                    )
+
+        nexus.mark_complete()
         return history
 
     def _publish_review_feedback(self, feedback: str) -> None:

@@ -18,6 +18,14 @@ def config() -> MSCConfig:
     return MSCConfig(orgs_root=REPO_ROOT / "orgs")
 
 
+@pytest.mark.parametrize("org_name", ["startup-mvp", "nexus-micro", "marketing-campaign", "incident-response"])
+def test_dry_run_all_orgs(config: MSCConfig, org_name: str) -> None:
+    report = run_dry_run(org_name, config)
+    assert report.org == org_name
+    assert report.roles_count >= 3
+    assert report.phases_count >= 1
+
+
 def test_dry_run_reports_missing_vendor_paths(config: MSCConfig) -> None:
     report = run_dry_run("startup-mvp", config)
     assert report.org == "startup-mvp"
@@ -84,3 +92,4 @@ def test_cli_orgs_list(monkeypatch: pytest.MonkeyPatch) -> None:
     result = runner.invoke(app, ["orgs", "list"])
     assert result.exit_code == 0
     assert "startup-mvp" in result.stdout
+    assert "nexus-micro" in result.stdout

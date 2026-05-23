@@ -35,12 +35,31 @@ class OrgHumanReviewConfig:
 
 
 @dataclass
+class OrgPhaseRef:
+    id: str
+    playbook: str
+    agents: list[str] = field(default_factory=list)
+    parallel: bool = False
+    dev_qa_loop: bool = False
+
+
+@dataclass
+class OrgGatesConfig:
+    max_retries: int = 3
+    require_evidence: bool = True
+    phase_advance: str = "reality_checker_pass"
+
+
+@dataclass
 class OrgTemplate:
     name: str
     description: str = ""
+    mode: str = ""
     budget_default: float = 15.0
     orchestrator: OrgOrchestratorRef | None = None
     roles: list[OrgRoleRef] = field(default_factory=list)
+    phases: list[OrgPhaseRef] = field(default_factory=list)
+    gates: OrgGatesConfig | None = None
     human_review: OrgHumanReviewConfig | None = None
 
 

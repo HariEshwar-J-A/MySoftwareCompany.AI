@@ -14,9 +14,13 @@ def test_to_runtime_template_startup_mvp() -> None:
     loader_tpl = load_org_template("startup-mvp", cfg)
     runtime_tpl = to_runtime_template(loader_tpl)
     assert runtime_tpl.name == "startup-mvp"
+    assert runtime_tpl.mode == "nexus-sprint"
     assert runtime_tpl.orchestrator is not None
     assert runtime_tpl.orchestrator.agent.endswith("agents-orchestrator.md")
     assert len(runtime_tpl.roles) == 4
+    assert len(runtime_tpl.phases) == 2
+    assert runtime_tpl.gates is not None
+    assert runtime_tpl.gates.max_retries == 3
     assert runtime_tpl.human_review is not None
     assert runtime_tpl.human_review.required is True
 

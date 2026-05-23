@@ -168,6 +168,39 @@ def run(
     raise typer.Exit(0)
 
 
+@app.command("resume")
+def resume(
+    org: Optional[str] = typer.Option(None, "--org", help="Org template name (for workspace path)"),
+    rounds: Optional[int] = typer.Option(None, "--rounds", help="Additional MetaGPT rounds"),
+    idea: str = typer.Option("", "--idea", help="Optional follow-up instruction"),
+) -> None:
+    """Resume a serialized team from workspace/.msc/team/."""
+    cfg = MSCConfig.load()
+    org_name = org or cfg.default_org
+    workspace = workspace_dir_for_org(org_name, cfg.workspace_root)
+    from msc.runtime.serialize import has_saved_team, resume_team
+
+    if not has_saved_team(workspace):
+        console.print(f"[red]No saved team at {workspace / '.msc/team/team.json'}[/red]")
+        console.print("Run `msc run` first to create a serialized team.")
+        raise typer.Exit(1)
+
+    ready, hint = llm_credentials_ready()
+    if not ready:
+        console.print(f"[yellow]{hint}[/yellow]")
+        raise typer.Exit(0)
+
+    n_rounds = rounds if rounds is not None else cfg.default_rounds
+    console.print(f"[bold]Resuming org '{org_name}'[/bold] (rounds={n_rounds}) → {workspace.resolve()}")
+    try:
+        company = asyncio.run(resume_team(workspace, n_round=n_rounds, idea=idea))
+    except Exception as exc:
+        console.print(f"[red]Resume failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+    console.print(f"[green]Resume finished.[/green] Workspace: {company.workspace.resolve()}")
+    raise typer.Exit(0)
+
+
 @app.command("dry-run")
 def dry_run(org: Optional[str] = typer.Option(None, "--org", help="Org template name")) -> None:
     """Validate org wiring without LLM calls."""

@@ -1,0 +1,31 @@
+name: nexus-micro
+description: Targeted single deliverable or bugfix (NEXUS-Micro, 1-5 days)
+source_runbook: vendor/agency-agents/strategy/nexus-strategy.md
+mode: nexus-micro
+license: oss
+budget_default: 5.0
+orchestrator:
+  agent: vendor/agency-agents/specialized/agents-orchestrator.md
+  metagpt_class: TeamLeader
+roles:
+  - agent: vendor/agency-agents/engineering/engineering-ai-engineer.md
+    tools: [Editor, Terminal]
+    llm_tier: standard
+  - agent: vendor/agency-agents/testing/testing-evidence-collector.md
+    tools: [Browser, Editor]
+    llm_tier: economy
+    role: quality_gate
+  - agent: vendor/agency-agents/testing/testing-reality-checker.md
+    role: final_gate
+phases:
+  - id: execute
+    playbook: vendor/agency-agents/strategy/playbooks/phase-3-build.md
+    agents: [engineering-ai-engineer, testing-evidence-collector]
+    dev_qa_loop: true
+gates:
+  max_retries: 3
+  require_evidence: true
+  phase_advance: reality_checker_pass
+human_review:
+  required: true
+  before: [deliver]

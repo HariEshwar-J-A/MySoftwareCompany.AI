@@ -58,7 +58,7 @@ def runs_dir() -> Path:
     return repo_root() / "benchmarks" / "runs"
 
 
-def discover_specs(suite: str = "standard") -> list[BenchmarkSpec]:
+def discover_specs(suite: str = "standard", spec_id: str | None = None) -> list[BenchmarkSpec]:
     if suite != "standard":
         raise ValueError(f"Unknown suite {suite!r}")
     by_id: dict[str, BenchmarkSpec] = {}
@@ -71,6 +71,10 @@ def discover_specs(suite: str = "standard") -> list[BenchmarkSpec]:
         if bid not in by_id:
             raise FileNotFoundError(f"Missing benchmark spec: {bid}.yaml")
         specs.append(by_id[bid])
+    if spec_id is not None:
+        if spec_id not in by_id:
+            raise ValueError(f"Unknown benchmark spec ID: {spec_id!r}")
+        return [by_id[spec_id]]
     return specs
 
 
@@ -142,5 +146,32 @@ def run_benchmark(spec: BenchmarkSpec, *, dry_run: bool) -> BenchmarkRunOutcome:
     return outcome
 
 
-def run_suite(*, suite: str = "standard", dry_run: bool = False) -> list[BenchmarkRunOutcome]:
-    return [run_benchmark(s, dry_run=dry_run) for s in discover_specs(suite=suite)]
+def run_suite(
+    *,
+    suite: str = "standard",
+    dry_run: bool = False,
+    spec_id: str | None = None,
+) -> list[BenchmarkRunOutcome]:
+    return [run_benchmark(s, dry_run=dry_run) for s in discover_specs(suite=suite, spec_id=spec_id)]
+
+
+def write_score(spec_id: str, *, compiles: bool, tests_pass: bool, requirements_met: int, polish_hours: float, llm_cost_usd: float, notes: str = "") -> Path:
+    """Write a human score to benchmarks/runs/<id>/result.json."""
+    run_root = runs_dir() / spec_id
+    run_root.mkdir(parents=True, exist_ok=True)
+    path = run_root / "result.json"
+    existing: dict = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    existing.update(
+        {
+            "id": spec_id,
+            "compiles": int(compiles),
+            "tests_pass": int(tests_pass),
+            "requirements_met": requirements_met,
+            "polish_hours": polish_hours,
+            "llm_cost_usd": llm_cost_usd,
+            "notes": notes,
+            "scored_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    return path

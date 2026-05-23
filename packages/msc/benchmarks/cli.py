@@ -7,8 +7,10 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from typing import Optional
+
 from msc.benchmarks.scorer import check_gate, collect_rows, write_scorecard
-from msc.benchmarks.suite import discover_specs, has_llm_credentials, run_suite
+from msc.benchmarks.suite import STANDARD_SUITE_IDS, discover_specs, has_llm_credentials, run_suite, write_score
 
 console = Console()
 benchmark_app = typer.Typer(
@@ -31,17 +33,56 @@ def benchmark_list(suite: str = typer.Option("standard", "--suite")) -> None:
 @benchmark_app.command("run")
 def benchmark_run(
     suite: str = typer.Option("standard", "--suite"),
+    spec: Optional[str] = typer.Option(None, "--spec", help=f"Run a single spec ID. Choices: {', '.join(STANDARD_SUITE_IDS)}"),
     dry_run: bool = typer.Option(False, "--dry-run"),
 ) -> None:
     if dry_run:
         console.print("[bold]Dry-run mode[/bold] — no LLM calls.")
     elif not has_llm_credentials():
         console.print("[yellow]No LLM API keys — runs will be skipped.[/yellow]")
-    for outcome in run_suite(suite=suite, dry_run=dry_run):
+    if spec:
+        console.print(f"Running single spec: [bold]{spec}[/bold]")
+    for outcome in run_suite(suite=suite, dry_run=dry_run, spec_id=spec or None):
         style = "green" if not outcome.skipped else "yellow"
         console.print(f"[{style}]{outcome.spec_id}[/{style}]: {outcome.message}")
     write_scorecard(suite=suite)
     console.print("Updated benchmarks/SCORECARD.md")
+
+
+@benchmark_app.command("score")
+def benchmark_score(
+    spec_id: str = typer.Argument(help=f"Spec to score. Choices: {', '.join(STANDARD_SUITE_IDS)}"),
+    compiles: bool = typer.Option(..., "--compiles/--no-compiles", help="Did the output compile / open without error?"),
+    tests: bool = typer.Option(..., "--tests/--no-tests", help="Do the automated/manual tests pass?"),
+    req: int = typer.Option(..., "--req", help="Requirements met 0–3 (0=none, 1=some, 2=most, 3=all)."),
+    polish: float = typer.Option(..., "--polish", help="Estimated hours to bring to client-ready polish."),
+    cost: float = typer.Option(0.0, "--cost", help="Actual LLM cost in USD from your dashboard."),
+    notes: str = typer.Option("", "--notes", help="Free-text notes about the output."),
+    suite: str = typer.Option("standard", "--suite"),
+) -> None:
+    """Record your human score for a benchmark run.
+
+    Example:
+
+        msc benchmark score todo-cli --compiles --tests --req 2 --polish 3 --cost 0.04
+    """
+    if req not in (0, 1, 2, 3):
+        console.print("[red]--req must be 0, 1, 2, or 3[/red]")
+        raise typer.Exit(1)
+    path = write_score(
+        spec_id,
+        compiles=compiles,
+        tests_pass=tests,
+        requirements_met=req,
+        polish_hours=polish,
+        llm_cost_usd=cost,
+        notes=notes,
+    )
+    console.print(f"[green]Score saved:[/green] {path}")
+    scorecard = write_scorecard(suite=suite)
+    gate = check_gate(collect_rows(suite=suite))
+    console.print(f"Updated {scorecard}")
+    console.print(f"Gate status: [bold]{gate['status']}[/bold] — {gate['reason']}")
 
 
 @benchmark_app.command("report")

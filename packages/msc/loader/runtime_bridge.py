@@ -14,8 +14,10 @@ from msc.loader.markdown_parser import parse_agent_file
 from msc.loader.org_template import OrgTemplate as LoaderOrgTemplate
 from msc.runtime.org_model import (
     LoadSpecFn,
+    OrgGatesConfig,
     OrgHumanReviewConfig,
     OrgOrchestratorRef,
+    OrgPhaseRef,
     OrgRoleRef,
     OrgTemplate as RuntimeOrgTemplate,
 )
@@ -28,6 +30,7 @@ def to_runtime_template(spec: LoaderOrgTemplate) -> RuntimeOrgTemplate:
     return RuntimeOrgTemplate(
         name=spec.name,
         description=spec.description,
+        mode=spec.mode,
         budget_default=spec.budget_default,
         orchestrator=OrgOrchestratorRef(
             agent=spec.orchestrator.agent,
@@ -42,6 +45,21 @@ def to_runtime_template(spec: LoaderOrgTemplate) -> RuntimeOrgTemplate:
             )
             for r in spec.roles
         ],
+        phases=[
+            OrgPhaseRef(
+                id=p.id,
+                playbook=p.playbook,
+                agents=list(p.agents),
+                parallel=p.parallel,
+                dev_qa_loop=p.dev_qa_loop,
+            )
+            for p in spec.phases
+        ],
+        gates=OrgGatesConfig(
+            max_retries=spec.gates.max_retries,
+            require_evidence=spec.gates.require_evidence,
+            phase_advance=spec.gates.phase_advance,
+        ),
         human_review=OrgHumanReviewConfig(
             required=spec.human_review.required,
             before=list(spec.human_review.before),
