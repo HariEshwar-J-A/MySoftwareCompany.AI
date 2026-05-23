@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Sequence
+
+from pydantic import Field
 
 from metagpt.const import TEAMLEADER_NAME
 from metagpt.roles.di.team_leader import TeamLeader
@@ -34,6 +37,9 @@ class AgentsOrchestrator(TeamLeader):
     profile: str = "Agents Orchestrator"
     agency_slug: str = "agents-orchestrator"
     llm_tier: str = "premium"
+
+    def bind_workspace(self, workspace: str | Path) -> None:
+        self.editor._set_workdir(str(Path(workspace).expanduser().resolve()))
 
     @classmethod
     def from_spec(

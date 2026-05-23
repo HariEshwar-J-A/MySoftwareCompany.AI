@@ -44,6 +44,11 @@ class OrgTemplate:
     human_review: OrgHumanReviewConfig | None = None
 
 
+def resolve_workspace_root(workspace_root: Path | str) -> Path:
+    """Expand and absolutize workspace root (prevents nested relative paths)."""
+    return Path(workspace_root).expanduser().resolve()
+
+
 def workspace_dir_for_org(org_name: str, workspace_root: Path | str = Path("workspace")) -> Path:
     slug = org_name.replace(" ", "-").lower()
-    return Path(workspace_root) / slug
+    return resolve_workspace_root(workspace_root) / slug

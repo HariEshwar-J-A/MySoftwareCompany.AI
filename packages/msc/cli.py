@@ -16,8 +16,10 @@ import msc.config as msc_config
 from msc.config import MSCConfig
 from msc.loader.catalog import get_agent, list_agents
 from msc.loader.org_template import list_org_templates, load_org_template
+from msc.review.deliverable import DeliverableCheckError
 from msc.runtime.dry_run import format_report, run_dry_run
 from msc.runtime.llm_config import llm_credentials_ready
+from msc.runtime.org_model import workspace_dir_for_org
 
 app = typer.Typer(help="MySoftwareCompany.AI — run AI software agencies.", no_args_is_help=True)
 orgs_app = typer.Typer(help="Org templates.")
@@ -105,7 +107,7 @@ def run(
     cfg = MSCConfig.load()
     org_name = org or cfg.default_org
     template = load_org_template(org_name, cfg)
-    workspace = cfg.workspace_root / template.name
+    workspace = workspace_dir_for_org(template.name, cfg.workspace_root)
     workspace.mkdir(parents=True, exist_ok=True)
     if no_human_review:
         stderr_console.print("[bold red]WARNING: Human review gate disabled. Do not use for client deliverables.[/bold red]")
@@ -151,6 +153,13 @@ def run(
                 no_human_review=no_human_review,
             )
         )
+    except DeliverableCheckError as exc:
+        console.print("[red]Run finished but deliverable check failed:[/red]")
+        for msg in exc.report.errors:
+            console.print(f"  • {msg}")
+        for msg in exc.report.warnings:
+            console.print(f"  [yellow]• {msg}[/yellow]")
+        raise typer.Exit(1) from exc
     except Exception as exc:
         console.print(f"[red]Run failed:[/red] {exc}")
         raise typer.Exit(1) from exc

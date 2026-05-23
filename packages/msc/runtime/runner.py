@@ -9,6 +9,7 @@ from msc.config import MSCConfig
 from msc.loader.org_template import OrgTemplate as LoaderOrgTemplate
 from msc.loader.runtime_bridge import make_load_spec, to_runtime_template
 from msc.runtime.company import MySoftwareCompany
+from msc.runtime.org_model import resolve_workspace_root
 
 
 async def run_org_project(
@@ -25,7 +26,10 @@ async def run_org_project(
     if budget is not None:
         runtime_template.budget_default = budget
 
-    company = MySoftwareCompany.from_org(runtime_template, workspace_root=config.workspace_root)
+    company = MySoftwareCompany.from_org(
+        runtime_template,
+        workspace_root=resolve_workspace_root(config.workspace_root),
+    )
     load_spec = make_load_spec(config)
     await company.run_with_review(
         idea,

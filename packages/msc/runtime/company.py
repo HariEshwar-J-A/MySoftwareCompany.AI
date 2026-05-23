@@ -11,6 +11,7 @@ from metagpt.logs import logger
 from metagpt.schema import Message, UserMessage
 from metagpt.team import Team
 
+from msc.review.deliverable import DeliverableCheckError, verify_workspace_deliverables
 from msc.review.gate import HumanReviewGate, ReviewDecision
 from msc.runtime.agency_role import AgencyRoleZero
 from msc.runtime.orchestrator import AgentsOrchestrator
@@ -37,7 +38,7 @@ class MySoftwareCompany(Team):
             self.org_template = org_template
             self.org_name = org_template.name
         if workspace is not None:
-            self.workspace = Path(workspace)
+            self.workspace = Path(workspace).expanduser().resolve()
         elif org_template is not None:
             self.workspace = workspace_dir_for_org(org_template.name)
         self.workspace.mkdir(parents=True, exist_ok=True)
@@ -53,11 +54,16 @@ class MySoftwareCompany(Team):
         workspace = workspace_dir_for_org(template.name, workspace_root)
         return cls(workspace=workspace, org_template=template, context=context)
 
+    def _bind_roster_workspace(self, roster: list[Any]) -> None:
+        for role in roster:
+            if hasattr(role, "bind_workspace"):
+                role.bind_workspace(self.workspace)
+
     def hire_from_template(self, template: OrgTemplate, load_spec: LoadSpecFn) -> None:
         """Hire TeamLeader + agency roles declared in an org YAML template."""
         self.org_template = template
         self.org_name = template.name
-        self.workspace = workspace_dir_for_org(template.name, self.workspace.parent)
+        self.workspace = self.workspace.resolve()
         self.workspace.mkdir(parents=True, exist_ok=True)
 
         roster: list[Any] = []
@@ -73,16 +79,17 @@ class MySoftwareCompany(Team):
 
         for entry in template.roles:
             spec = load_spec(entry.agent)
-            role = AgencyRoleZero.from_spec(
-                spec,
-                tools=entry.tools or None,
-                llm_tier=entry.llm_tier,
+            roster.append(
+                AgencyRoleZero.from_spec(
+                    spec,
+                    tools=entry.tools or None,
+                    llm_tier=entry.llm_tier,
+                )
             )
-            role.bind_workspace(self.workspace)
-            roster.append(role)
 
+        self._bind_roster_workspace(roster)
         self.hire(roster)
-        logger.info("Hired %s roles for org '%s' into %s", len(roster), template.name, self.workspace)
+        logger.info("Hired {} roles for org '{}' into {}", len(roster), template.name, self.workspace)
 
     def bootstrap(self, template: OrgTemplate, idea: str, *, load_spec: LoadSpecFn) -> None:
         """Hire roster, set budget, and publish the project idea."""
@@ -95,7 +102,7 @@ class MySoftwareCompany(Team):
         meta_path.parent.mkdir(parents=True, exist_ok=True)
         payload: dict[str, Any] = {
             "org": self.org_name,
-            "workspace": str(self.workspace),
+            "workspace": str(self.workspace.resolve()),
             "budget_default": self.org_template.budget_default if self.org_template else None,
         }
         if extra:
@@ -140,11 +147,21 @@ class MySoftwareCompany(Team):
                 self._publish_review_feedback(feedback)
                 history = await self.run(n_round=min(n_round, 5))
             elif decision == ReviewDecision.REJECT:
-                gate.record_run_outcome("rejected")
-                logger.warning("Run rejected at human review gate for org '%s'", self.org_name)
+                gate.record_run_outcome("rejected", no_human_review=no_human_review)
+                logger.warning("Run rejected at human review gate for org '{}'", self.org_name)
                 return history
 
-        gate.record_run_outcome("completed")
+        deliverable = verify_workspace_deliverables(self.workspace)
+        gate.write_metadata({"deliverable_check": deliverable.to_dict()})
+        if not deliverable.ok:
+            gate.record_run_outcome("failed_deliverable_check", no_human_review=no_human_review)
+            for msg in deliverable.errors:
+                logger.error("Deliverable check: {}", msg)
+            for msg in deliverable.warnings:
+                logger.warning("Deliverable check: {}", msg)
+            raise DeliverableCheckError(deliverable)
+
+        gate.record_run_outcome("completed", no_human_review=no_human_review)
         self.write_org_metadata(gate.read_metadata())
         return history
 

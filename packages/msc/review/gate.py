@@ -31,7 +31,7 @@ class HumanReviewGate:
     """Pauses a run for operator sign-off; records bypass in workspace metadata."""
 
     def __init__(self, workspace: Path | str, *, required: bool = True):
-        self.workspace = Path(workspace)
+        self.workspace = Path(workspace).expanduser().resolve()
         self.required = required
         self.last_feedback: str | None = None
         self._metadata_path = self.workspace / METADATA_DIR / RUN_METADATA_FILE
@@ -66,6 +66,7 @@ class HumanReviewGate:
             {
                 "no_human_review": True,
                 "human_review_required": False,
+                "human_review_status": "bypassed",
                 "bypass_warning": NO_HUMAN_REVIEW_WARNING.strip(),
             }
         )
@@ -80,7 +81,12 @@ class HumanReviewGate:
             return ReviewDecision.APPROVED
 
         if not interactive or not sys.stdin.isatty():
-            self.write_metadata({"human_review_pending": stage, "human_review_status": "skipped_non_tty"})
+            self.write_metadata(
+                {
+                    "human_review_pending": stage,
+                    "human_review_status": "skipped_non_tty",
+                }
+            )
             return ReviewDecision.APPROVED
 
         print(f"\n=== Human review gate ({stage}) ===", file=sys.stderr)
@@ -116,5 +122,7 @@ class HumanReviewGate:
         )
         return decision
 
-    def record_run_outcome(self, outcome: str) -> None:
+    def record_run_outcome(self, outcome: str, *, no_human_review: bool = False) -> None:
+        if no_human_review and outcome == "completed":
+            outcome = "completed_unreviewed"
         self.write_metadata({"run_outcome": outcome})
