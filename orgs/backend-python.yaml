@@ -1,0 +1,11 @@
+name: backend-python
+description: Direct Python/FastAPI backend builder — no phases, no discovery, no frontend. Writes code immediately.
+mode: direct
+license: oss
+budget_default: 5.0
+orchestrator:
+  agent: vendor/agency-agents/engineering/engineering-python-fastapi.md
+  metagpt_class: RoleZero
+roles: []
+human_review:
+  required: false

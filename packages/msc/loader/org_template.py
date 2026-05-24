@@ -43,7 +43,7 @@ class HumanReviewSpec(BaseModel):
 class OrgTemplate(BaseModel):
     name: str
     description: str
-    source_runbook: str
+    source_runbook: str = ""
     mode: str
     license: Literal["oss", "premium"] = "oss"
     pack_id: str | None = None
@@ -55,7 +55,7 @@ class OrgTemplate(BaseModel):
     human_review: HumanReviewSpec = Field(default_factory=HumanReviewSpec)
 
     def referenced_paths(self) -> list[str]:
-        paths = [self.source_runbook, self.orchestrator.agent]
+        paths = [p for p in [self.source_runbook, self.orchestrator.agent] if p]
         paths.extend(r.agent for r in self.roles)
         paths.extend(p.playbook for p in self.phases)
         return paths
