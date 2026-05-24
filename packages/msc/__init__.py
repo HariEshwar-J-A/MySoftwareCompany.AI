@@ -3,7 +3,7 @@
 
 """MySoftwareCompany.AI core package (mscai on PyPI)."""
 
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 
 from msc.loader.agent_spec import AgentSpec
 from msc.loader.catalog import (

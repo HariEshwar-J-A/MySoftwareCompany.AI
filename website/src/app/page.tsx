@@ -3,7 +3,9 @@
 
 import Link from "next/link";
 import { Container } from "@/components/container";
+import { DemoVideo } from "@/components/demo-video";
 import { listPremiumPacks } from "@/lib/marketplace";
+import { GITHUB_REPO, PYPI_INSTALL } from "@/lib/site";
 
 export default function HomePage() {
   const featured = listPremiumPacks().slice(0, 3);
@@ -30,8 +32,14 @@ export default function HomePage() {
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              href="/marketplace"
+              href={`${GITHUB_REPO}#install`}
               className="rounded-xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-400"
+            >
+              Get started
+            </Link>
+            <Link
+              href="/marketplace"
+              className="rounded-xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
             >
               Browse org marketplace
             </Link>
@@ -41,6 +49,21 @@ export default function HomePage() {
             >
               Hire our team
             </Link>
+          </div>
+          <p className="mt-6 font-mono text-sm text-slate-500">
+            <span className="text-slate-600">$</span> {PYPI_INSTALL}
+          </p>
+        </Container>
+      </section>
+
+      <section className="border-b border-white/5 py-20">
+        <Container>
+          <h2 className="text-2xl font-semibold text-white">See it in action</h2>
+          <p className="mt-2 max-w-2xl text-slate-400">
+            Launch demo — terminal workflow, benchmark gate, and marketplace checkout.
+          </p>
+          <div className="mt-10 max-w-4xl">
+            <DemoVideo />
           </div>
         </Container>
       </section>
@@ -132,8 +155,14 @@ export default function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              href="/pricing"
+              href={`${GITHUB_REPO}#quick-start`}
               className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+            >
+              Get started
+            </Link>
+            <Link
+              href="/pricing"
+              className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
             >
               See pricing
             </Link>

@@ -5,7 +5,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { GITHUB_REPO } from "@/lib/site";
 import "./globals.css";
+
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://mysoftwarecompany.ai";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,17 +22,38 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "MySoftwareCompany.AI — AI software agencies from the terminal",
     template: "%s · MySoftwareCompany.AI",
   },
   description:
     "Configure an org, describe an idea, and let a coordinated AI team build it—with quality gates and human review before client handoff.",
+  keywords: [
+    "AI agents",
+    "software agency",
+    "MetaGPT",
+    "multi-agent",
+    "CLI",
+    "marketplace",
+  ],
   openGraph: {
     title: "MySoftwareCompany.AI",
     description: "AI software agencies you run from the terminal.",
     siteName: "MySoftwareCompany.AI",
     type: "website",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MySoftwareCompany.AI",
+    description: "AI software agencies you run from the terminal.",
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  other: {
+    "github-repo": GITHUB_REPO,
   },
 };
 

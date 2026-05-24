@@ -32,6 +32,8 @@ Copy `.env.example` to `.env.local` (never commit secrets):
 | `STRIPE_WEBHOOK_SECRET` | For webhook | Signing secret from Stripe CLI or dashboard |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | For checkout | Publishable key (client-side Stripe.js if added later) |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Public site URL for redirect URLs |
+| `NEXT_PUBLIC_DEMO_VIDEO_URL` | Optional | YouTube/Vimeo URL for home page demo iframe |
+| `NEXT_PUBLIC_GITHUB_REPO` | Optional | GitHub repo URL for Get started / footer links |
 | `MSC_LICENSE_PRIVATE_KEY` or `MSC_LICENSE_PRIVATE_KEY_PATH` | For license issuance | Ed25519 publisher private key (same as `scripts/.marketplace_dev_key.pem` in dev) |
 | `LEAD_WEBHOOK_URL` | Optional | CRM webhook for contact form |
 | `STRIPE_PRICE_FINTECH_STUDIO` | Optional | Pre-created Stripe Price ID (else dynamic `price_data` is used) |

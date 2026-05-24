@@ -12,11 +12,15 @@ requires-python = ">=3.10"
 authors = [{ name = "MySoftwareCompany.AI" }]
 keywords = ["ai", "agents", "metagpt", "multi-agent", "software-agency"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development",
 ]
 dependencies = [
     "typer>=0.9.0,<0.10",
@@ -27,10 +31,18 @@ dependencies = [
     "cryptography>=42.0",
 ]
 
+[project.urls]
+Homepage = "https://mysoftwarecompany.ai"
+Repository = "https://github.com/mysoftwarecompany/MySoftwareCompany.AI"
+Changelog = "https://github.com/mysoftwarecompany/MySoftwareCompany.AI/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/mysoftwarecompany/MySoftwareCompany.AI#readme"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
+    "build>=1.0",
+    "twine>=4.0",
 ]
 
 [project.scripts]

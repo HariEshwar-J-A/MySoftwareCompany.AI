@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import Link from "next/link";
+import { GITHUB_REPO } from "@/lib/site";
 
 const links = [
   { href: "/services", label: "Services" },
@@ -34,10 +35,10 @@ export function SiteHeader() {
           ))}
         </nav>
         <Link
-          href="/marketplace"
+          href={`${GITHUB_REPO}#install`}
           className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-400"
         >
-          Get org packs
+          Get started
         </Link>
       </div>
     </header>
