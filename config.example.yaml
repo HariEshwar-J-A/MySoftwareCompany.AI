@@ -12,6 +12,6 @@ default_rounds: 20
 # OpenRouter models — all default to Gemini 2.0 Flash (multi-provider, avoids quota 402s).
 # Override individual tiers as needed.
 llm_tiers:
-  economy: deepseek/deepseek-v4-flash:free
-  standard: qwen/qwen3-coder:free
-  premium: meta-llama/llama-3.3-70b-instruct:free
+  economy: meta-llama/llama-3.1-8b-instruct
+  standard: openai/gpt-oss-20b
+  premium: openai/gpt-oss-120b

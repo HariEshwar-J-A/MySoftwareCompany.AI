@@ -16,9 +16,9 @@ _ENV_PREFIX = "MSC_"
 # OpenRouter model IDs (https://openrouter.ai) — override via llm_tiers in config or MSC_LLM_TIER_*
 # All tiers default to Gemini 2.0 Flash — reliable, multi-provider, avoids single-provider quota errors.
 # Override individual tiers in .env (MSC_LLM_TIER_PREMIUM=moonshotai/kimi-k2.6, etc.) when needed.
-OPENROUTER_MODEL_ECONOMY = "deepseek/deepseek-v4-flash:free"
-OPENROUTER_MODEL_STANDARD = "qwen/qwen3-coder:free"
-OPENROUTER_MODEL_PREMIUM = "meta-llama/llama-3.3-70b-instruct:free"
+OPENROUTER_MODEL_ECONOMY = "meta-llama/llama-3.1-8b-instruct"    # $0.02/1M — fast, no rate limits
+OPENROUTER_MODEL_STANDARD = "openai/gpt-oss-20b"                 # $0.03/1M
+OPENROUTER_MODEL_PREMIUM = "openai/gpt-oss-120b"                  # $0.039/1M — strongest cheap option
 
 
 class LLMTierMapping(BaseModel):
