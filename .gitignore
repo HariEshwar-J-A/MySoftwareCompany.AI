@@ -21,6 +21,9 @@ build/
 *.secret
 secrets/
 
+# Local-only planning (not shared via git)
+docs/YET_TO_DO.md
+
 # Local config overrides (use *.example.yaml in repo only)
 *.local.yaml
 *.local.yml
