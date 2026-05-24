@@ -283,7 +283,11 @@ class CodeParser:
     def parse_code(cls, text: str, lang: str = "", block: Optional[str] = None) -> str:
         if block:
             text = cls.parse_block(block, text)
-        pattern = rf"```{lang}.*?\s+(.*?)\n```"
+        # Use greedy (.*) so that embedded triple-backticks inside content (e.g. markdown
+        # code blocks inside a JSON string value) don't prematurely end the match.
+        # The greedy quantifier backtracks to the LAST \n``` in the text, which is the
+        # real closing fence rather than one embedded inside the content.
+        pattern = rf"```{lang}[^\n]*\n(.*)\n```"
         match = re.search(pattern, text, re.DOTALL)
         if match:
             code = match.group(1)

@@ -363,7 +363,9 @@ class Editor(BaseModel):
         filename = self._try_fix_path(filename)
 
         if filename.exists():
-            raise FileExistsError(f"File '{filename}' already exists.")
+            # On retry the file may already exist; open it without overwriting content.
+            self.open_file(filename)
+            return f"[File {filename} already exists, opened.]"
         await awrite(filename, "\n")
 
         self.open_file(filename)

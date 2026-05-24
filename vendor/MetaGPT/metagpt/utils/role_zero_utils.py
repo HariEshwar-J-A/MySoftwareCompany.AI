@@ -134,6 +134,10 @@ async def parse_commands(command_rsp: str, llm, exclusive_tool_commands: list[st
         commands = commands["commands"] if "commands" in commands else [commands]
 
     # Set the exclusive command flag to False.
+    # Guard against malformed entries (missing command_name) produced by failed JSON repair
+    commands = [c for c in commands if isinstance(c, dict) and "command_name" in c]
+    if not commands:
+        return "No valid commands parsed", False, command_rsp
     command_flag = [command["command_name"] not in exclusive_tool_commands for command in commands]
     if command_flag.count(False) > 1:
         # Keep only the first exclusive command

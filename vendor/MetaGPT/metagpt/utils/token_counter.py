@@ -224,6 +224,13 @@ DASHSCOPE_TOKEN_COSTS = {
     "moss-moon-003-sft-v1": {"prompt": 0.0, "completion": 0.0},
     "chatyuan-large-v2": {"prompt": 0.0, "completion": 0.0},
     "billa-7b-sft-v1": {"prompt": 0.0, "completion": 0.0},
+    # OpenRouter cheap paid models (prices in $/1M tokens)
+    "openai/gpt-oss-120b": {"prompt": 0.039, "completion": 0.18},
+    "openai/gpt-oss-20b": {"prompt": 0.03, "completion": 0.14},
+    "meta-llama/llama-3.1-8b-instruct": {"prompt": 0.02, "completion": 0.05},
+    "meta-llama/llama-3.3-70b-instruct": {"prompt": 0.13, "completion": 0.4},
+    "qwen/qwen3-coder": {"prompt": 0.05, "completion": 0.2},
+    "deepseek/deepseek-v4-flash": {"prompt": 0.08, "completion": 0.24},
 }
 
 
