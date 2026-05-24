@@ -15,6 +15,7 @@ from msc.review.deliverable import DeliverableCheckError
 from msc.review.quality_gates import run_deliverable_gate
 from msc.review.gate import HumanReviewGate, ReviewDecision
 from msc.runtime.agency_role import AgencyRoleZero
+from msc.llm_openrouter import llm_override_updates
 from msc.runtime.llm_tiers import model_for_tier, record_tier_plan, tier_plan_for_roles
 from msc.runtime.nexus import NexusRunner
 from msc.runtime.orchestrator import AgentsOrchestrator
@@ -128,12 +129,13 @@ class MySoftwareCompany(Team):
             return
         for role in self.env.roles.values():
             tier = getattr(role, "llm_tier", "standard")
-            if tier == "standard":
-                continue
             model_name = model_for_tier(tier, self.msc_config.llm_tiers)
             try:
                 base_cfg: MetaGPTConfig = role.context.config
-                overridden_llm = base_cfg.llm.model_copy(update={"model": model_name})
+                api_type = self.msc_config.llm_api_type if self.msc_config else None
+                overridden_llm = base_cfg.llm.model_copy(
+                    update=llm_override_updates(model_name, base_cfg.llm, llm_api_type=api_type)
+                )
                 private_cfg = base_cfg.model_copy(update={"llm": overridden_llm})
                 role.set_config(private_cfg)
                 logger.debug("Role '{}' → llm_tier={} model={}", role.name, tier, model_name)

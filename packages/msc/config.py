@@ -13,11 +13,16 @@ DEFAULT_CONFIG_DIR = Path.home() / ".msc"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR / "config.yaml"
 _ENV_PREFIX = "MSC_"
 
+# OpenRouter model IDs (https://openrouter.ai) — override via llm_tiers in config or MSC_LLM_TIER_*
+OPENROUTER_MODEL_ECONOMY = "deepseek/deepseek-v4-flash:free"
+OPENROUTER_MODEL_STANDARD = "google/gemma-4-31b-it:free"
+OPENROUTER_MODEL_PREMIUM = "moonshotai/kimi-k2.6"
+
 
 class LLMTierMapping(BaseModel):
-    economy: str = "gpt-4o-mini"
-    standard: str = "gpt-4o"
-    premium: str = "claude-opus-4-20250514"
+    economy: str = OPENROUTER_MODEL_ECONOMY
+    standard: str = OPENROUTER_MODEL_STANDARD
+    premium: str = OPENROUTER_MODEL_PREMIUM
 
 
 class MSCConfig(BaseModel):
@@ -25,6 +30,7 @@ class MSCConfig(BaseModel):
     orgs_root: Path = Field(default=Path("orgs"))
     agency_agents_root: Path = Field(default=Path("vendor/agency-agents"))
     metagpt_config: Path | None = None
+    llm_api_type: str | None = None  # e.g. openrouter — also set MSC_LLM_API_TYPE in .env
     llm_tiers: LLMTierMapping = Field(default_factory=LLMTierMapping)
     default_org: str = "startup-mvp"
     default_budget: float = 15.0
@@ -39,6 +45,9 @@ class MSCConfig(BaseModel):
 
     @classmethod
     def load(cls, path: Path | None = None) -> MSCConfig:
+        from msc.dotenv_loader import load_project_dotenv
+
+        load_project_dotenv()
         config_path = path or DEFAULT_CONFIG_PATH
         if not config_path.exists():
             return cls.from_env(cls())
@@ -71,6 +80,7 @@ class MSCConfig(BaseModel):
             "DEFAULT_ORG": "default_org",
             "DEFAULT_BUDGET": "default_budget",
             "DEFAULT_ROUNDS": "default_rounds",
+            "LLM_API_TYPE": "llm_api_type",
         }.items():
             if f"{_ENV_PREFIX}{suffix}" in os.environ:
                 val = os.environ[f"{_ENV_PREFIX}{suffix}"]

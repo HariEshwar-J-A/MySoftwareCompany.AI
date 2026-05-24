@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import subprocess
 import sys
 from typing import Optional
 
@@ -30,20 +31,123 @@ console = Console()
 stderr_console = Console(file=sys.stderr)
 
 
+@app.callback()
+def _main(
+    ctx: typer.Context,
+    log_level: Optional[str] = typer.Option(
+        None,
+        "--log-level",
+        help="Console log level: DEBUG, INFO, WARNING, ERROR (or MSC_LOG_LEVEL in .env)",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Shortcut for --log-level DEBUG",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Console ERROR only (default console is already WARNING, no INFO)",
+    ),
+    info: bool = typer.Option(
+        False,
+        "--info",
+        help="Show MetaGPT INFO on console (default hides INFO; file logs stay INFO)",
+    ),
+) -> None:
+    """Load `.env` and configure logging before any subcommand."""
+    from msc.dotenv_loader import load_project_dotenv
+    from msc.logging_config import configure_logging
+
+    load_project_dotenv()
+    try:
+        level = configure_logging(
+            log_level=log_level, verbose=verbose, quiet=quiet, info=info
+        )
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(2) from exc
+    ctx.ensure_object(dict)
+    ctx.obj["log_level"] = level
+
+
 @app.command("version")
 def version_cmd() -> None:
     """Print package version."""
     console.print(f"mscai {__version__}")
 
 
+def _print_init_status(lines: dict[str, str]) -> None:
+    status_keys = (
+        "env",
+        "msc",
+        "metagpt",
+        "metagpt_key",
+        "workspace",
+        "vendor",
+        "marketplace_keys",
+        "website",
+        "openrouter",
+    )
+    for key in status_keys:
+        if key in lines:
+            console.print(f"  [green]•[/green] {lines[key]}")
+    if lines.get("openrouter", "").startswith("TODO"):
+        console.print(
+            "\n[yellow]Edit repo-root .env → set OPENROUTER_API_KEY, then:[/yellow] "
+            "[bold]msc init --env-only[/bold]"
+        )
+
+
 @app.command()
-def init(force: bool = typer.Option(False, "--force")) -> None:
-    """Write ~/.msc/config.yaml."""
-    path = msc_config.DEFAULT_CONFIG_PATH
-    if path.exists() and not force:
-        console.print(f"Config already exists: {path}")
+def init(
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite ~/.msc/config.yaml and ~/.metagpt/config2.yaml"
+    ),
+    env_only: bool = typer.Option(
+        False,
+        "--env-only",
+        help="Only sync OPENROUTER_API_KEY from .env into ~/.metagpt/config2.yaml",
+    ),
+    full: bool = typer.Option(
+        False,
+        "--full",
+        help="Also vendor-sync and npm ci (website); slower first-time setup",
+    ),
+) -> None:
+    """Bootstrap: .env template, ~/.msc/config.yaml, ~/.metagpt/config2.yaml from repo + .env."""
+    from msc.dotenv_loader import find_repo_root
+    from msc.bootstrap import run_init
+
+    root = find_repo_root()
+    if root is None:
+        path = msc_config.DEFAULT_CONFIG_PATH
+        if path.exists() and not force:
+            console.print(f"Config already exists: {path}")
+            console.print(
+                "[yellow]Clone the repo for full init (.env, OpenRouter, MetaGPT).[/yellow]"
+            )
+            raise typer.Exit(0)
+        saved = MSCConfig().save(path)
+        console.print(f"Wrote minimal config (not in repo): {saved}")
         raise typer.Exit(0)
-    console.print(f"Wrote config: {MSCConfig().save(path)}")
+
+    try:
+        lines = run_init(root=root, force=force, env_only=env_only, full=full)
+    except (RuntimeError, FileNotFoundError, subprocess.CalledProcessError) as exc:
+        console.print(f"[red]Init failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    title = "Synced from .env" if env_only else "Init complete"
+    console.print(f"[bold]{title}[/bold] (repo: {root.resolve()})\n")
+    _print_init_status(lines)
+    if not env_only:
+        console.print(
+            "\n[dim]Next:[/dim] msc dry-run --org startup-mvp  →  "
+            'msc run "your idea" --org startup-mvp --budget 10'
+        )
 
 
 @orgs_app.command("list")

@@ -21,8 +21,8 @@ LLM_ENV_KEYS = (
 )
 
 _METAGPT_CONFIG_HINT = (
-    "Add your API key to ~/.metagpt/config2.yaml (see vendor/MetaGPT/config/config2.example.yaml). "
-    "Keys are never stored in this repository."
+    "Set OPENROUTER_API_KEY in .env (recommended) or api_key in ~/.metagpt/config2.yaml. "
+    "OpenRouter setup: config/metagpt.openrouter.example.yaml. Keys are never stored in this repository."
 )
 
 

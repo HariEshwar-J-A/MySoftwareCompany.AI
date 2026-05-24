@@ -5,10 +5,12 @@ workspace_root: ./workspace
 orgs_root: orgs
 agency_agents_root: vendor/agency-agents
 # metagpt_config: ~/.metagpt/config2.yaml
+# llm_api_type: openrouter
 default_org: startup-mvp
 default_budget: 15.0
 default_rounds: 20
+# OpenRouter models (see config/metagpt.openrouter.example.yaml + OPENROUTER_API_KEY in .env)
 llm_tiers:
-  economy: gpt-4o-mini
-  standard: gpt-4o
-  premium: claude-opus-4-20250514
+  economy: deepseek/deepseek-v4-flash:free
+  standard: google/gemma-4-31b-it:free
+  premium: moonshotai/kimi-k2.6

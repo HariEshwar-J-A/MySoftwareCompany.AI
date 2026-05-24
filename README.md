@@ -24,23 +24,28 @@ msc --version
 ```bash
 git clone https://github.com/mysoftwarecompany/MySoftwareCompany.AI.git
 cd MySoftwareCompany.AI
-make vendor-sync install-dev
-```
-
-Publishing steps for maintainers: [docs/PUBLISHING.md](docs/PUBLISHING.md).
-
-## Quick start
-
-```bash
-msc init
-msc orgs list
-msc agents list --division engineering
+make install-dev            # venv, vendors, editable msc + MetaGPT
+msc init                    # creates .env from .env.example, ~/.msc, ~/.metagpt
+# Edit .env — set OPENROUTER_API_KEY (https://openrouter.ai/keys)
+msc init --env-only         # sync key into ~/.metagpt/config2.yaml
 msc dry-run --org startup-mvp
-msc run "Build a todo CLI" --org startup-mvp --budget 10
+msc run "Build a todo CLI" --org startup-mvp --budget 10 --rounds 20
 ```
 
-Config: copy `config.example.yaml` to `~/.msc/config.yaml` (paths, default org). **API keys**
-go in `~/.metagpt/config2.yaml` only — never in the repo.
+First-time clone with vendors + website deps: `msc init --full`. Publishing: [docs/PUBLISHING.md](docs/PUBLISHING.md).
+
+## Configuration (`msc init`)
+
+| Command | What it does |
+|---------|----------------|
+| `msc init` | `.env` (if missing), `~/.msc/config.yaml`, `~/.metagpt/config2.yaml`, `workspace/` |
+| `msc init --env-only` | After editing `.env`, sync `OPENROUTER_API_KEY` → MetaGPT config |
+| `msc init --force` | Overwrite existing MSC + MetaGPT config files |
+| `msc init --full` | Above + `vendor_sync` + `website` npm ci |
+
+Repo-root [`.env`](.env.example) is the only file you edit for secrets. MSC applies tier models (DeepSeek Flash / Gemma / Kimi K2.6 on OpenRouter). Never commit `.env`.
+
+**Logging:** console defaults to **WARNING** (no INFO lines); details still go to `vendor/MetaGPT/logs/` at **INFO**. Show INFO on stderr: `msc --info run …`. More: `msc --verbose` (DEBUG). Less: `msc --quiet` (ERROR only). Override: `MSC_LOG_LEVEL` in `.env`.
 
 ## Benchmark gate
 

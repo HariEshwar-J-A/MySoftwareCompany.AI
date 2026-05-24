@@ -24,7 +24,9 @@ Next.js App Router marketing site for [MySoftwareCompany.AI](https://mysoftwarec
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` (never commit secrets):
+Use the **repo-root** [`.env.example`](../.env.example) → copy to `../.env` (never commit secrets). `next.config.ts` loads `../.env` when you run commands from `website/`.
+
+Legacy reference (same variables, now in root `.env.example`):
 
 | Variable | Required | Description |
 |---|---|---|

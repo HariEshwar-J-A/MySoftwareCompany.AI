@@ -1,4 +1,4 @@
-.PHONY: vendor-sync install install-dev lint license-headers test ci
+.PHONY: vendor-sync install install-dev init lint license-headers test ci
 
 vendor-sync:
 	./scripts/vendor_sync.sh
@@ -9,6 +9,9 @@ install: vendor-sync
 
 install-dev: install
 	pip install -e ".[dev]"
+
+init:
+	msc init
 
 lint:
 	ruff check packages scripts tests

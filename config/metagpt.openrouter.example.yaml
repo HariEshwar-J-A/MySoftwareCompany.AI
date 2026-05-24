@@ -1,0 +1,13 @@
+# Copy to ~/.metagpt/config2.yaml (or set MSC_METAGPT_CONFIG to this file path).
+# Set OPENROUTER_API_KEY in repo-root .env — MSC applies tier models per role at runtime.
+#
+# Tier mapping (economy / standard / premium) is in ~/.msc/config.yaml or MSC_LLM_TIER_* in .env:
+#   deepseek/deepseek-v4-flash:free
+#   google/gemma-4-31b-it:free
+#   moonshotai/kimi-k2.6
+
+llm:
+  api_type: openrouter
+  base_url: "https://openrouter.ai/api/v1"
+  api_key: "YOUR_OPENROUTER_API_KEY"
+  model: google/gemma-4-31b-it:free
