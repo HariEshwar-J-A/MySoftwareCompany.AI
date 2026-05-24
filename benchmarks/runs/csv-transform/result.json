@@ -1,10 +1,10 @@
 {
   "id": "csv-transform",
-  "requirements_met": 2,
-  "polish_hours": 2.0,
-  "notes": "csv_aggregator.py compiles clean. filter+aggregate+sum+average all work. sample.csv and test1.sh included. CLI arg names differ from README examples (underscore vs dash) - minor UX fix needed. Run crashed mid-refinement due to transient OpenRouter SSE error, not code quality.",
+  "requirements_met": 1,
+  "polish_hours": 4.0,
+  "notes": "Compiles and passthrough CSV works. README filter/aggregate examples fail: all values coerced to str (age>25 errors), aggregate eval lacks column scope (sum(salary) undefined). Works only with int(age)>25 and int(row['salary']). Uses eval(); errors print but still writes unfiltered data. README+sample_data present, no automated tests.",
   "compiles": 1,
-  "tests_pass": 1,
+  "tests_pass": 0,
   "llm_cost_usd": 0.03,
-  "scored_at": "2026-05-23T23:05:26.086767+00:00"
+  "scored_at": "2026-05-24T14:35:17.065409+00:00"
 }

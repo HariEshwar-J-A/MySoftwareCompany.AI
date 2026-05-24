@@ -1,7 +1,7 @@
 {
   "id": "todo-cli",
-  "dry_run": true,
-  "started_at": "2026-05-20T04:41:02.608404+00:00",
-  "message": "dry-run: spec validated; no LLM invocation",
-  "skipped": false
+  "dry_run": false,
+  "started_at": "2026-05-24T00:35:55.300295+00:00",
+  "message": "timeout after 375s \u2014 partial run (workspace may contain usable files)",
+  "skipped": true
 }

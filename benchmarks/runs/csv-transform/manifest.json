@@ -1,7 +1,7 @@
 {
   "id": "csv-transform",
-  "dry_run": true,
-  "started_at": "2026-05-20T04:41:02.609159+00:00",
-  "message": "dry-run: spec validated; no LLM invocation",
+  "dry_run": false,
+  "started_at": "2026-05-24T13:56:16.013100+00:00",
+  "message": "completed via msc run",
   "skipped": false
 }

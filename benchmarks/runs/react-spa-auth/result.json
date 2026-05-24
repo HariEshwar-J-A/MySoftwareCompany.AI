@@ -1,6 +1,10 @@
 {
   "id": "react-spa-auth",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 0,
+  "polish_hours": 8.0,
+  "notes": "Run failed in 21s; empty workspace. TeamLeader planned PRD\u2192arch\u2192tasks\u2192code chain, never assigned implementation; waited on Alice indefinitely.",
+  "compiles": 0,
+  "tests_pass": 0,
+  "llm_cost_usd": 0.05,
+  "scored_at": "2026-05-24T18:24:40.828332+00:00"
 }

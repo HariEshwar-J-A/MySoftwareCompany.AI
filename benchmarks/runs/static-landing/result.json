@@ -1,6 +1,10 @@
 {
   "id": "static-landing",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 1,
+  "polish_hours": 6.0,
+  "notes": "All 5 sections drafted with Tailwind responsive classes. Hero.js has JSX syntax errors; no package.json/build scaffold \u2014 not runnable.",
+  "compiles": 0,
+  "tests_pass": 0,
+  "llm_cost_usd": 0.05,
+  "scored_at": "2026-05-24T14:43:44.405944+00:00"
 }

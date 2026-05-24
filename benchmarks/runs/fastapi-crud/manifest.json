@@ -1,7 +1,7 @@
 {
   "id": "fastapi-crud",
-  "dry_run": true,
-  "started_at": "2026-05-20T04:41:02.608696+00:00",
-  "message": "dry-run: spec validated; no LLM invocation",
+  "dry_run": false,
+  "started_at": "2026-05-24T16:30:08.156566+00:00",
+  "message": "completed via msc run",
   "skipped": false
 }

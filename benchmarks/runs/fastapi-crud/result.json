@@ -1,6 +1,10 @@
 {
   "id": "fastapi-crud",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 2,
+  "polish_hours": 2.0,
+  "notes": "Full CRUD routes, SQLite/SQLAlchemy, pytest test_create_item passes. Deprecation warnings; only one test.",
+  "compiles": 1,
+  "tests_pass": 1,
+  "llm_cost_usd": 0.06,
+  "scored_at": "2026-05-24T18:17:03.310680+00:00"
 }

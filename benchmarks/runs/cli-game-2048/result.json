@@ -1,6 +1,10 @@
 {
   "id": "cli-game-2048",
-  "requirements_met": "NEEDS_HUMAN_SCORE",
-  "polish_hours": "NEEDS_HUMAN_SCORE",
-  "notes": "Fill after human review."
+  "requirements_met": 1,
+  "polish_hours": 2.0,
+  "notes": "2048 logic present for up/left/down/right but game loop passes w/a/s/d \u2014 moves have no effect. ~1 line key-map fix to be playable.",
+  "compiles": 1,
+  "tests_pass": 0,
+  "llm_cost_usd": 0.04,
+  "scored_at": "2026-05-24T14:45:22.809597+00:00"
 }

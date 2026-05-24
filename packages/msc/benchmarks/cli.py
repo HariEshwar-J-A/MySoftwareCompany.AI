@@ -3,14 +3,23 @@
 
 from __future__ import annotations
 
-import typer
-from rich.console import Console
-from rich.table import Table
-
+import time
 from typing import Optional
 
+import typer
+from rich.console import Console
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.table import Table
+
 from msc.benchmarks.scorer import MIN_SCORED_FOR_PRELIMINARY, check_gate, collect_rows, write_scorecard
-from msc.benchmarks.suite import STANDARD_SUITE_IDS, discover_specs, has_llm_credentials, run_suite, write_score
+from msc.benchmarks.suite import (
+    STANDARD_SUITE_IDS,
+    benchmark_timeout_seconds,
+    discover_specs,
+    has_llm_credentials,
+    run_benchmark,
+    write_score,
+)
 
 console = Console()
 benchmark_app = typer.Typer(
@@ -40,11 +49,42 @@ def benchmark_run(
         console.print("[bold]Dry-run mode[/bold] — no LLM calls.")
     elif not has_llm_credentials():
         console.print("[yellow]No LLM API keys — runs will be skipped.[/yellow]")
+    specs = discover_specs(suite=suite, spec_id=spec or None)
+    total = len(specs)
     if spec:
         console.print(f"Running single spec: [bold]{spec}[/bold]")
-    for outcome in run_suite(suite=suite, dry_run=dry_run, spec_id=spec or None):
-        style = "green" if not outcome.skipped else "yellow"
-        console.print(f"[{style}]{outcome.spec_id}[/{style}]: {outcome.message}")
+    elif total:
+        console.print(f"Running [bold]{total}[/bold] benchmark spec(s) from suite [bold]{suite}[/bold]")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("{task.completed}/{task.total}"),
+        TimeElapsedColumn(),
+        console=console,
+        transient=False,
+    ) as progress:
+        suite_task = progress.add_task("Benchmark suite", total=total)
+        for index, bench_spec in enumerate(specs, start=1):
+            timeout_s = benchmark_timeout_seconds(bench_spec)
+            progress.update(
+                suite_task,
+                description=f"Spec {index}/{total}: {bench_spec.id} (≤{timeout_s}s)",
+            )
+            console.print(
+                f"\n[bold cyan]▶ {index}/{total}[/bold cyan] [bold]{bench_spec.id}[/bold] "
+                f"[dim](rounds={bench_spec.rounds}, timeout={timeout_s}s, org={bench_spec.org})[/dim]"
+            )
+            started = time.monotonic()
+            outcome = run_benchmark(bench_spec, dry_run=dry_run)
+            elapsed_s = int(time.monotonic() - started)
+            progress.advance(suite_task)
+            style = "green" if not outcome.skipped else "yellow"
+            console.print(
+                f"[{style}]{outcome.spec_id}[/{style}]: {outcome.message} "
+                f"[dim]({elapsed_s}s / {timeout_s}s)[/dim]"
+            )
     write_scorecard(suite=suite)
     console.print("Updated benchmarks/SCORECARD.md")
 

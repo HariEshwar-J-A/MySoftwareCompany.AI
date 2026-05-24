@@ -3,8 +3,9 @@ name: CSV Transform Script
 description: CSV filter and aggregate CLI
 project_type: data
 idea: Python CLI to filter, aggregate, and export CSV with README and sample data.
-org: startup-mvp
+org: bench-full-stack
 budget: 7.0
+rounds: 25
 requirements:
   - filter and aggregate commands
   - Valid CSV output

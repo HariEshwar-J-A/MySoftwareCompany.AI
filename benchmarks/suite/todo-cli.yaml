@@ -3,8 +3,9 @@ name: Python Todo CLI
 description: Command-line task manager with persistent storage
 project_type: cli
 idea: Build a Python CLI todo app with add, list, complete, delete; persist to JSON.
-org: startup-mvp
+org: bench-full-stack
 budget: 8.0
+rounds: 25
 requirements:
   - Add, list, complete, delete tasks
   - Persistent storage between runs
