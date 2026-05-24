@@ -37,3 +37,6 @@ config2.local.yaml
 
 # Benchmark workspaces may contain generated artifacts
 benchmarks/runs/**/workspace/
+
+# MetaGPT vendored example/RAG corpus data (Chinese news articles — runtime-modified, not ours)
+vendor/MetaGPT/examples/
