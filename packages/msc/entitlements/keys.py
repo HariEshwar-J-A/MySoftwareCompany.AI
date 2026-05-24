@@ -16,7 +16,9 @@ from pydantic import BaseModel, Field
 from msc.config import DEFAULT_CONFIG_DIR
 
 LICENSE_PREFIX = "MSC1"
-DEFAULT_PUBLISHER_PUBKEY = Path(__file__).resolve().parents[1] / "marketplace" / "publisher_pubkey.pem"
+DEFAULT_PUBLISHER_PUBKEY = (
+    Path(__file__).resolve().parents[1] / "marketplace" / "publisher_pubkey.pem"
+)
 
 
 class LicensePayload(BaseModel):

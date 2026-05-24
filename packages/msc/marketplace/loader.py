@@ -5,13 +5,17 @@
 
 from __future__ import annotations
 
-import base64
 import json
 from pathlib import Path
 
 import yaml
 
-from msc.entitlements.keys import DEFAULT_PUBLISHER_PUBKEY, LicensePayload, _b64url_decode, _b64url_encode
+from msc.entitlements.keys import (
+    DEFAULT_PUBLISHER_PUBKEY,
+    LicensePayload,
+    _b64url_decode,
+    _b64url_encode,
+)
 from msc.loader.org_template import OrgTemplate
 
 PACK_VERSION = 1
@@ -68,7 +72,7 @@ def list_premium_pack_ids() -> list[str]:
     directory = premium_orgs_dir()
     if not directory.is_dir():
         return []
-    return sorted(p.stem for p in directory.glob("*.yaml.enc"))
+    return sorted(p.name.removesuffix(".yaml.enc") for p in directory.glob("*.yaml.enc"))
 
 
 def load_premium_org_template(

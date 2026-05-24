@@ -4,6 +4,7 @@
 from msc.entitlements.keys import (
     LicensePayload,
     entitlement_path,
+    issue_license_token,
     load_stored_license,
     save_stored_license,
     verify_license_token,
@@ -12,6 +13,7 @@ from msc.entitlements.keys import (
 __all__ = [
     "LicensePayload",
     "entitlement_path",
+    "issue_license_token",
     "load_stored_license",
     "save_stored_license",
     "verify_license_token",

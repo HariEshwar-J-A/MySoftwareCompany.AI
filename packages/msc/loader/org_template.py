@@ -74,15 +74,44 @@ def orgs_dir(config: MSCConfig | None = None) -> Path:
 def load_org_template(name: str, config: MSCConfig | None = None) -> OrgTemplate:
     slug = name.removesuffix(".yaml")
     path = orgs_dir(config) / f"{slug}.yaml"
-    if not path.exists():
-        raise FileNotFoundError(f"Org template not found: {path}")
-    with path.open(encoding="utf-8") as handle:
-        data = yaml.safe_load(handle)
-    return OrgTemplate.model_validate(data)
+    if path.is_file():
+        with path.open(encoding="utf-8") as handle:
+            data = yaml.safe_load(handle)
+        return OrgTemplate.model_validate(data)
+
+    from msc.entitlements.keys import load_stored_license
+    from msc.marketplace.loader import list_premium_pack_ids, load_premium_org_template
+
+    if slug in list_premium_pack_ids():
+        stored = load_stored_license()
+        if stored is None:
+            raise PermissionError(
+                f"Premium org {slug!r} requires a marketplace license. "
+                "Run: msc marketplace login <key>"
+            )
+        _, payload = stored
+        return load_premium_org_template(slug, payload=payload)
+
+    raise FileNotFoundError(f"Org template not found: {path}")
 
 
 def list_org_templates(config: MSCConfig | None = None) -> list[OrgTemplate]:
     directory = orgs_dir(config)
-    if not directory.is_dir():
-        return []
-    return [load_org_template(p.stem, config) for p in sorted(directory.glob("*.yaml"))]
+    templates: list[OrgTemplate] = []
+    if directory.is_dir():
+        templates.extend(
+            load_org_template(p.stem, config) for p in sorted(directory.glob("*.yaml"))
+        )
+
+    from msc.entitlements.keys import load_stored_license
+    from msc.marketplace.loader import list_premium_pack_ids, load_premium_org_template
+
+    stored = load_stored_license()
+    if stored is not None:
+        _, payload = stored
+        oss_names = {t.name for t in templates}
+        for pack_id in list_premium_pack_ids():
+            if pack_id in payload.entitled_packs and pack_id not in oss_names:
+                templates.append(load_premium_org_template(pack_id, payload=payload))
+
+    return sorted(templates, key=lambda t: t.name)

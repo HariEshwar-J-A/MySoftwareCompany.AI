@@ -48,7 +48,7 @@ def init(force: bool = typer.Option(False, "--force")) -> None:
 
 @orgs_app.command("list")
 def orgs_list() -> None:
-    """List OSS org templates."""
+    """List org templates (OSS + entitled premium packs)."""
     templates = list_org_templates(MSCConfig.load())
     if not templates:
         console.print("[yellow]No org templates found.[/yellow]")
@@ -68,7 +68,9 @@ def agents_list(division: Optional[str] = typer.Option(None, "--division")) -> N
     cfg = MSCConfig.load()
     agents = list_agents(division=division, agents_root=cfg.agency_agents_root)
     if not agents:
-        console.print(f"[yellow]No agents under {cfg.agency_agents_root}. Run make vendor-sync.[/yellow]")
+        console.print(
+            f"[yellow]No agents under {cfg.agency_agents_root}. Run make vendor-sync.[/yellow]"
+        )
         raise typer.Exit(0)
     table = Table(title="Agents")
     for col in ("Slug", "Division", "Name"):
@@ -86,7 +88,9 @@ def agents_show(slug: str) -> None:
     if not agent:
         console.print(f"[red]Agent not found:[/red] {slug}")
         raise typer.Exit(1)
-    console.print(f"[bold]{agent.name}[/bold] ({agent.slug})\nDivision: {agent.division}\nPath: {agent.path}")
+    console.print(
+        f"[bold]{agent.name}[/bold] ({agent.slug})\nDivision: {agent.division}\nPath: {agent.path}"
+    )
     if agent.description:
         console.print(f"\n{agent.description}")
 
@@ -118,7 +122,9 @@ def run(
         workspace = workspace_dir_for_org(template.name, cfg.workspace_root)
     workspace.mkdir(parents=True, exist_ok=True)
     if no_human_review:
-        stderr_console.print("[bold red]WARNING: Human review gate disabled. Do not use for client deliverables.[/bold red]")
+        stderr_console.print(
+            "[bold red]WARNING: Human review gate disabled. Do not use for client deliverables.[/bold red]"
+        )
         msc_dir = workspace / ".msc"
         msc_dir.mkdir(parents=True, exist_ok=True)
         meta_path = msc_dir / "metadata.json"
@@ -202,7 +208,9 @@ def resume(
         raise typer.Exit(0)
 
     n_rounds = rounds if rounds is not None else cfg.default_rounds
-    console.print(f"[bold]Resuming org '{org_name}'[/bold] (rounds={n_rounds}) → {workspace.resolve()}")
+    console.print(
+        f"[bold]Resuming org '{org_name}'[/bold] (rounds={n_rounds}) → {workspace.resolve()}"
+    )
     try:
         company = asyncio.run(resume_team(workspace, n_round=n_rounds, idea=idea))
     except Exception as exc:
@@ -222,5 +230,7 @@ def dry_run(org: Optional[str] = typer.Option(None, "--org", help="Org template 
 
 
 from msc.benchmarks.cli import register_benchmark_commands  # noqa: E402
+from msc.marketplace.cli import marketplace_app  # noqa: E402
 
 register_benchmark_commands(app)
+app.add_typer(marketplace_app, name="marketplace")
