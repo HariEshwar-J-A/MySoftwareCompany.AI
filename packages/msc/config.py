@@ -16,7 +16,7 @@ _ENV_PREFIX = "MSC_"
 # OpenRouter model IDs (https://openrouter.ai) — override via llm_tiers in config or MSC_LLM_TIER_*
 # All tiers default to Gemini 2.0 Flash — reliable, multi-provider, avoids single-provider quota errors.
 # Override individual tiers in .env (MSC_LLM_TIER_PREMIUM=moonshotai/kimi-k2.6, etc.) when needed.
-OPENROUTER_MODEL_FALLBACK = "google/gemini-2.0-flash-001"
+OPENROUTER_MODEL_FALLBACK = "google/gemini-2.0-flash-exp:free"
 OPENROUTER_MODEL_ECONOMY = OPENROUTER_MODEL_FALLBACK
 OPENROUTER_MODEL_STANDARD = OPENROUTER_MODEL_FALLBACK
 OPENROUTER_MODEL_PREMIUM = OPENROUTER_MODEL_FALLBACK
