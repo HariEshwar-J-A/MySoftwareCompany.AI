@@ -9,8 +9,9 @@ agency_agents_root: vendor/agency-agents
 default_org: startup-mvp
 default_budget: 15.0
 default_rounds: 20
-# OpenRouter models (see config/metagpt.openrouter.example.yaml + OPENROUTER_API_KEY in .env)
+# OpenRouter models — all default to Gemini 2.0 Flash (multi-provider, avoids quota 402s).
+# Override individual tiers as needed.
 llm_tiers:
-  economy: deepseek/deepseek-v4-flash:free
-  standard: google/gemma-4-31b-it:free
-  premium: moonshotai/kimi-k2.6
+  economy: google/gemini-2.0-flash-001
+  standard: google/gemini-2.0-flash-001
+  premium: google/gemini-2.0-flash-001

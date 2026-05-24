@@ -14,9 +14,12 @@ DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR / "config.yaml"
 _ENV_PREFIX = "MSC_"
 
 # OpenRouter model IDs (https://openrouter.ai) — override via llm_tiers in config or MSC_LLM_TIER_*
-OPENROUTER_MODEL_ECONOMY = "deepseek/deepseek-v4-flash:free"
-OPENROUTER_MODEL_STANDARD = "google/gemma-4-31b-it:free"
-OPENROUTER_MODEL_PREMIUM = "moonshotai/kimi-k2.6"
+# All tiers default to Gemini 2.0 Flash — reliable, multi-provider, avoids single-provider quota errors.
+# Override individual tiers in .env (MSC_LLM_TIER_PREMIUM=moonshotai/kimi-k2.6, etc.) when needed.
+OPENROUTER_MODEL_FALLBACK = "google/gemini-2.0-flash-001"
+OPENROUTER_MODEL_ECONOMY = OPENROUTER_MODEL_FALLBACK
+OPENROUTER_MODEL_STANDARD = OPENROUTER_MODEL_FALLBACK
+OPENROUTER_MODEL_PREMIUM = OPENROUTER_MODEL_FALLBACK
 
 
 class LLMTierMapping(BaseModel):
