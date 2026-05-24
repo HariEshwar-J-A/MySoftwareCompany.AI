@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-05-24T18:34:21.801Z",
+  "packs": [
+    {
+      "pack_id": "fintech-studio",
+      "name": "fintech-studio",
+      "description": "Regulated fintech MVP studio — compliance-first build (NEXUS-Sprint)",
+      "mode": "nexus-sprint",
+      "budget_default": 25,
+      "priceUsd": 499,
+      "tagline": "Regulated fintech MVP studio",
+      "features": [
+        "Compliance-first NEXUS-Sprint org",
+        "Finance, legal, backend & frontend agents",
+        "Human review gate before deliver"
+      ]
+    }
+  ]
+}

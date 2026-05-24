@@ -40,3 +40,26 @@ jobs:
 
       - name: Tests
         run: pytest -q
+
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Lint
+        working-directory: website
+        run: npm run lint
+
+      - name: Build
+        working-directory: website
+        run: npm run build
